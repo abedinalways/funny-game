@@ -43,6 +43,12 @@ export default <Partial<Config>>{
           safe: 'var(--color-ludo-safe)',
         },
       },
+      gridTemplateColumns: {
+        15: 'repeat(15, minmax(0, 1fr))',
+      },
+      gridTemplateRows: {
+        15: 'repeat(15, minmax(0, 1fr))',
+      },
     },
   },
 }
