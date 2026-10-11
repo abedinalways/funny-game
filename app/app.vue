@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { HugeiconsIcon } from '@hugeicons/vue'
-import { Crown02Icon, RefreshIcon, VolumeHighIcon, VolumeMute01Icon } from '@hugeicons/core-free-icons'
+import { Crown02Icon, RefreshIcon, VolumeHighIcon, VolumeMute01Icon, AiGameIcon, User02Icon } from '@hugeicons/core-free-icons'
 
 const {
   players,
@@ -16,6 +16,7 @@ const {
   history,
   isMuted,
   toggleMute,
+  togglePlayerBot,
   rollDice,
   selectToken,
   resetGame,
@@ -94,20 +95,42 @@ const {
           <div
             v-for="p in players"
             :key="p.id"
-            class="p-2 rounded-sm border transition-all"
+            class="p-2 rounded-sm border transition-all flex flex-col justify-between"
             :class="[
               p.color === activePlayerColor
                 ? 'bg-surface border-amber-400 ring-1 ring-amber-400/50'
                 : 'bg-surface/50 border-border/40 opacity-70',
             ]"
           >
-            <div class="flex items-center justify-between">
-              <span class="text-xs font-extrabold uppercase">{{ p.name }}</span>
-              <span class="text-[10px] text-neutral-400">
-                Home: {{ p.tokens.filter(t => t.status === 'finished').length }}/4
+            <div class="flex items-center justify-between mb-1">
+              <span class="text-xs font-extrabold uppercase truncate mr-1">{{ p.name }}</span>
+              <button
+                type="button"
+                class="inline-flex items-center gap-1 px-1.5 py-0.5 text-[10px] font-bold rounded-sm border transition-colors cursor-pointer"
+                :class="[
+                  p.isBot
+                    ? 'border-indigo-400/60 bg-indigo-950/60 text-indigo-300 hover:bg-indigo-900/60'
+                    : 'border-emerald-400/60 bg-emerald-950/60 text-emerald-300 hover:bg-emerald-900/60',
+                ]"
+                @click="togglePlayerBot(p.color)"
+              >
+                <HugeiconsIcon
+                  :icon="p.isBot ? AiGameIcon : User02Icon"
+                  :size="11"
+                />
+                <span>{{ p.isBot ? 'Bot' : 'Human' }}</span>
+              </button>
+            </div>
+            <div class="flex items-center justify-between text-[10px] text-neutral-400 mb-1">
+              <span>Goal: {{ p.tokens.filter(t => t.status === 'finished').length }}/4</span>
+              <span
+                v-if="p.color === activePlayerColor && p.isBot"
+                class="text-amber-400 font-semibold animate-pulse"
+              >
+                Thinking...
               </span>
             </div>
-            <div class="flex gap-1 mt-1.5">
+            <div class="flex gap-1">
               <span
                 v-for="t in p.tokens"
                 :key="t.id"
