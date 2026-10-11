@@ -13,6 +13,7 @@ const {
   isRolling,
   phase,
   canMoveTokenIds,
+  destinationMap,
   canRollDice,
   movingTokenId,
   winners,
@@ -131,6 +132,7 @@ const handleRematch = () => {
             :active-player-color="activePlayerColor"
             :can-move-token-ids="canMoveTokenIds"
             :moving-token-id="movingTokenId"
+            :destination-map="destinationMap"
             @select-token="selectToken"
           />
           <LudoFloatingTauntOverlay :taunts="activeTaunts" />

@@ -1,4 +1,4 @@
-import type { BoardCell, BoardCoordinate, CellType, PlayerColor } from '~/types/ludo'
+import type { BoardCell, BoardCoordinate, CellType, PlayerColor, Token } from '~/types/ludo'
 import {
   BASE_SLOTS,
   COMMON_PATH,
@@ -110,4 +110,19 @@ const determineCellType = (row: number, col: number): BoardCell => {
     type: isStar ? 'safe' : 'common',
     isStar,
   }
+}
+
+export const getTargetCoordinate = (
+  token: Token,
+  roll: number
+): BoardCoordinate | null => {
+  const path = getPlayerFullPath(token.color)
+  if (token.status === 'home') {
+    return roll === 6 ? path[0] : null
+  }
+  const nextStep = token.step + roll
+  if (nextStep <= 56) {
+    return path[nextStep]
+  }
+  return null
 }
