@@ -12,6 +12,7 @@ import {
   isSafeSquare,
 } from '~/utils/ludoBoard'
 import { getRandomQuote } from '~/constants/funnyDialogs'
+import { useFunnySound } from '~/composables/useFunnySound'
 
 const TURN_ORDER: PlayerColor[] = ['red', 'green', 'yellow', 'blue']
 
@@ -42,6 +43,7 @@ const createInitialPlayers = (): Player[] => {
 }
 
 export const useLudoEngine = () => {
+  const sound = useFunnySound()
   const players = ref<Player[]>(createInitialPlayers())
   const activePlayerColor = ref<PlayerColor>('red')
   const diceValue = ref<number | null>(null)
@@ -108,6 +110,7 @@ export const useLudoEngine = () => {
 
     isRolling.value = true
     phase.value = 'rolling'
+    sound.playRoll()
 
     await new Promise(resolve => setTimeout(resolve, 600))
 
@@ -117,6 +120,7 @@ export const useLudoEngine = () => {
 
     if (rolled === 6) {
       consecutiveSixes.value += 1
+      sound.playSix()
       addFunnyMessage(activePlayer.value.name, activePlayerColor.value, getRandomQuote('six'))
 
       if (consecutiveSixes.value === 3) {
@@ -168,6 +172,7 @@ export const useLudoEngine = () => {
           token.step = -1
           token.position = getBaseSlotCoordinate(token.color, token.index)
           captured = true
+          sound.playKill()
 
           addFunnyMessage(activePlayer.value.name, activePlayerColor.value, getRandomQuote('kill'))
           addFunnyMessage(player.name, player.color, getRandomQuote('killed'))
@@ -192,16 +197,19 @@ export const useLudoEngine = () => {
       token.status = 'path'
       token.step = 0
       token.position = path[0]
+      sound.playStep()
     } else {
       const targetStep = token.step + roll
       for (let s = token.step + 1; s <= targetStep; s++) {
         token.step = s
         token.position = path[s]
+        sound.playStep()
         await new Promise(resolve => setTimeout(resolve, 80))
       }
 
       if (token.step === 56) {
         token.status = 'finished'
+        sound.playHome()
         addFunnyMessage(activePlayer.value.name, activePlayerColor.value, getRandomQuote('home'))
       } else if (token.step >= 51) {
         token.status = 'goal_track'
@@ -217,6 +225,7 @@ export const useLudoEngine = () => {
     if (allFinished && !activePlayer.value.hasFinished) {
       activePlayer.value.hasFinished = true
       winners.value.push(activePlayerColor.value)
+      sound.playWin()
       addFunnyMessage(activePlayer.value.name, activePlayerColor.value, getRandomQuote('win'))
 
       if (winners.value.length === 3) {
@@ -260,6 +269,8 @@ export const useLudoEngine = () => {
     movingTokenId,
     winners,
     history,
+    isMuted: sound.isMuted,
+    toggleMute: sound.toggleMute,
     rollDice,
     selectToken,
     resetGame,
