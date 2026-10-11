@@ -71,3 +71,4 @@ export interface GameState {
   history: FunnyMessage[]
   selectedTokenId: string | null
 }
+
