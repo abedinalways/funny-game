@@ -7,8 +7,10 @@ import type {
   FunnyMessage,
 } from '~/types/ludo'
 import {
+  coordKey,
   getBaseSlotCoordinate,
   getPlayerFullPath,
+  getTargetCoordinate,
   isSafeSquare,
 } from '~/utils/ludoBoard'
 import { getRandomQuote } from '~/constants/funnyDialogs'
@@ -95,6 +97,20 @@ export const useLudoEngine = () => {
   const canMoveTokenIds = computed<string[]>(() => {
     if (phase.value !== 'select_token' || diceValue.value === null) return []
     return getMovableTokens(activePlayerColor.value, diceValue.value).map(t => t.id)
+  })
+
+  const destinationMap = computed<Map<string, { token: Token; color: PlayerColor }>>(() => {
+    const map = new Map<string, { token: Token; color: PlayerColor }>()
+    if (phase.value !== 'select_token' || diceValue.value === null) return map
+
+    const movable = getMovableTokens(activePlayerColor.value, diceValue.value)
+    for (const token of movable) {
+      const target = getTargetCoordinate(token, diceValue.value)
+      if (target) {
+        map.set(coordKey(target.row, target.col), { token, color: token.color })
+      }
+    }
+    return map
   })
 
   const canRollDice = computed<boolean>(() => {
@@ -305,6 +321,7 @@ export const useLudoEngine = () => {
     isRolling,
     phase,
     canMoveTokenIds,
+    destinationMap,
     canRollDice,
     movingTokenId,
     winners,
