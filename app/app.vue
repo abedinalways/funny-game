@@ -2,6 +2,9 @@
 import { HugeiconsIcon } from '@hugeicons/vue'
 import { Crown02Icon, RefreshIcon, VolumeHighIcon, VolumeMute01Icon, AiGameIcon, User02Icon } from '@hugeicons/core-free-icons'
 
+import type { EmojiTauntItem } from '~/types/taunt'
+import { useEmojiTaunts } from '~/composables/useEmojiTaunts'
+
 const {
   players,
   activePlayerColor,
@@ -21,6 +24,26 @@ const {
   selectToken,
   resetGame,
 } = useLudoEngine()
+
+const { activeTaunts, triggerTaunt, triggerRandomBotTaunt } = useEmojiTaunts()
+
+const handleSendTaunt = (taunt: EmojiTauntItem) => {
+  triggerTaunt(taunt, activePlayerColor.value, activePlayer.value.name)
+}
+
+watch(
+  () => history.value[0],
+  (latest) => {
+    if (latest) {
+      const player = players.value.find(p => p.color === latest.color)
+      if (player && player.isBot && Math.random() < 0.6) {
+        setTimeout(() => {
+          triggerRandomBotTaunt(player.color, player.name)
+        }, 350)
+      }
+    }
+  }
+)
 
 const isVictoryModalOpen = ref(false)
 
@@ -101,14 +124,21 @@ const handleRematch = () => {
     </header>
 
     <div class="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-      <div class="lg:col-span-7 flex flex-col items-center">
-        <LudoGameBoard
-          :players="players"
-          :active-player-color="activePlayerColor"
-          :can-move-token-ids="canMoveTokenIds"
-          :moving-token-id="movingTokenId"
-          @select-token="selectToken"
-        />
+      <div class="lg:col-span-7 flex flex-col items-center w-full">
+        <div class="relative w-full">
+          <LudoGameBoard
+            :players="players"
+            :active-player-color="activePlayerColor"
+            :can-move-token-ids="canMoveTokenIds"
+            :moving-token-id="movingTokenId"
+            @select-token="selectToken"
+          />
+          <LudoFloatingTauntOverlay :taunts="activeTaunts" />
+        </div>
+
+        <div class="w-full max-w-[560px] mt-3">
+          <LudoEmojiTauntPicker @select="handleSendTaunt" />
+        </div>
       </div>
 
       <div class="lg:col-span-5 flex flex-col gap-4 w-full">
