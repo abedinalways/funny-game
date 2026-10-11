@@ -2,12 +2,19 @@
 import type { BoardCell, BoardCoordinate, Player, PlayerColor, Token } from '~/types/ludo'
 import { coordKey, getBoardGrid } from '~/utils/ludoBoard'
 
-const props = defineProps<{
-  players: Player[]
-  activePlayerColor: PlayerColor
-  canMoveTokenIds: string[]
-  movingTokenId?: string | null
-}>()
+const props = withDefaults(
+  defineProps<{
+    players: Player[]
+    activePlayerColor: PlayerColor
+    canMoveTokenIds: string[]
+    movingTokenId?: string | null
+    destinationMap?: Map<string, { token: Token; color: PlayerColor }>
+  }>(),
+  {
+    movingTokenId: null,
+    destinationMap: () => new Map(),
+  }
+)
 
 const emit = defineEmits<{
   (e: 'selectToken', token: Token): void
@@ -53,6 +60,14 @@ const finishedCounts = computed<Record<PlayerColor, number>>(() => {
   }
   return counts
 })
+
+const isCellDestination = (row: number, col: number): boolean => {
+  return props.destinationMap?.has(coordKey(row, col)) ?? false
+}
+
+const getCellDestinationColor = (row: number, col: number): PlayerColor => {
+  return props.destinationMap?.get(coordKey(row, col))?.color ?? props.activePlayerColor
+}
 </script>
 
 <template>
@@ -124,7 +139,11 @@ const finishedCounts = computed<Record<PlayerColor, number>>(() => {
             }"
             class="relative w-full h-full"
           >
-            <LudoBoardCell :cell="grid[r - 1][c - 1]">
+            <LudoBoardCell
+              :cell="grid[r - 1][c - 1]"
+              :is-destination="isCellDestination(r - 1, c - 1)"
+              :destination-color="getCellDestinationColor(r - 1, c - 1)"
+            >
               <div
                 v-if="getTokensAtCell(r - 1, c - 1).length > 0"
                 class="flex items-center justify-center -space-x-1"
