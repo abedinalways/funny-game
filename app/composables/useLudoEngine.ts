@@ -13,8 +13,16 @@ import {
 } from '~/utils/ludoBoard'
 import { getRandomQuote } from '~/constants/funnyDialogs'
 import { useFunnySound } from '~/composables/useFunnySound'
+import { selectBestBotToken } from '~/utils/ludoBotStrategy'
 
 const TURN_ORDER: PlayerColor[] = ['red', 'green', 'yellow', 'blue']
+
+const DEFAULT_PLAYERS_META: Record<PlayerColor, { name: string; isBot: boolean }> = {
+  red: { name: 'You (Player 1)', isBot: false },
+  green: { name: 'বল্টু (Bot)', isBot: true },
+  yellow: { name: 'মন্টু (Bot)', isBot: true },
+  blue: { name: 'ঝন্টু (Bot)', isBot: true },
+}
 
 const createInitialPlayers = (): Player[] => {
   return TURN_ORDER.map((color) => {
@@ -30,11 +38,13 @@ const createInitialPlayers = (): Player[] => {
       }
     })
 
+    const meta = DEFAULT_PLAYERS_META[color]
+
     return {
       id: color,
-      name: color.charAt(0).toUpperCase() + color.slice(1),
+      name: meta.name,
       color,
-      isBot: false,
+      isBot: meta.isBot,
       avatar: color,
       tokens,
       hasFinished: false,
@@ -244,6 +254,36 @@ export const useLudoEngine = () => {
     }
   }
 
+  const togglePlayerBot = (color: PlayerColor) => {
+    const player = players.value.find(p => p.color === color)
+    if (player) {
+      player.isBot = !player.isBot
+      const prefix = color.charAt(0).toUpperCase() + color.slice(1)
+      player.name = player.isBot ? `${prefix} (Bot)` : `${prefix} (Human)`
+    }
+  }
+
+  watch([activePlayerColor, phase], async ([color, currentPhase]) => {
+    const player = players.value.find(p => p.color === color)
+    if (!player || !player.isBot || winners.value.length >= 3) return
+
+    if (currentPhase === 'idle' && !isRolling.value) {
+      await new Promise(resolve => setTimeout(resolve, 700))
+      if (phase.value === 'idle' && activePlayerColor.value === color) {
+        await rollDice()
+      }
+    } else if (currentPhase === 'select_token' && diceValue.value !== null) {
+      const movable = getMovableTokens(color, diceValue.value)
+      if (movable.length > 0) {
+        const bestToken = selectBestBotToken(movable, diceValue.value, players.value)
+        await new Promise(resolve => setTimeout(resolve, 600))
+        if (phase.value === 'select_token' && activePlayerColor.value === color) {
+          await selectToken(bestToken)
+        }
+      }
+    }
+  })
+
   const resetGame = () => {
     players.value = createInitialPlayers()
     activePlayerColor.value = 'red'
@@ -271,6 +311,7 @@ export const useLudoEngine = () => {
     history,
     isMuted: sound.isMuted,
     toggleMute: sound.toggleMute,
+    togglePlayerBot,
     rollDice,
     selectToken,
     resetGame,
