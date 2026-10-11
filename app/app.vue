@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { HugeiconsIcon } from '@hugeicons/vue'
-import { Crown02Icon, RefreshIcon } from '@hugeicons/core-free-icons'
+import { Crown02Icon, RefreshIcon, VolumeHighIcon, VolumeMute01Icon } from '@hugeicons/core-free-icons'
 
 const {
   players,
@@ -14,6 +14,8 @@ const {
   movingTokenId,
   winners,
   history,
+  isMuted,
+  toggleMute,
   rollDice,
   selectToken,
   resetGame,
@@ -40,17 +42,32 @@ const {
         </div>
       </div>
 
-      <button
-        type="button"
-        class="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-bold uppercase rounded-sm border border-border bg-surface hover:bg-slate-800 transition-colors cursor-pointer shadow-sm"
-        @click="resetGame"
-      >
-        <HugeiconsIcon
-          :icon="RefreshIcon"
-          :size="14"
-        />
-        <span>Reset Game</span>
-      </button>
+      <div class="flex items-center gap-2">
+        <button
+          type="button"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold uppercase rounded-sm border border-border bg-surface hover:bg-slate-800 transition-colors cursor-pointer shadow-sm"
+          :class="isMuted ? 'text-rose-400' : 'text-emerald-400'"
+          @click="toggleMute"
+        >
+          <HugeiconsIcon
+            :icon="isMuted ? VolumeMute01Icon : VolumeHighIcon"
+            :size="14"
+          />
+          <span>{{ isMuted ? 'Muted' : 'Sound On' }}</span>
+        </button>
+
+        <button
+          type="button"
+          class="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-bold uppercase rounded-sm border border-border bg-surface hover:bg-slate-800 transition-colors cursor-pointer shadow-sm"
+          @click="resetGame"
+        >
+          <HugeiconsIcon
+            :icon="RefreshIcon"
+            :size="14"
+          />
+          <span>Reset Game</span>
+        </button>
+      </div>
     </header>
 
     <div class="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
