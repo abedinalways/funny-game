@@ -21,6 +21,22 @@ const {
   selectToken,
   resetGame,
 } = useLudoEngine()
+
+const isVictoryModalOpen = ref(false)
+
+watch(
+  () => winners.value.length,
+  (count) => {
+    if (count > 0) {
+      isVictoryModalOpen.value = true
+    }
+  }
+)
+
+const handleRematch = () => {
+  resetGame()
+  isVictoryModalOpen.value = false
+}
 </script>
 
 <template>
@@ -44,6 +60,19 @@ const {
       </div>
 
       <div class="flex items-center gap-2">
+        <button
+          v-if="winners.length > 0"
+          type="button"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold uppercase rounded-sm border border-amber-400/80 bg-amber-400/20 text-amber-400 hover:bg-amber-400/30 transition-colors cursor-pointer shadow-sm animate-pulse"
+          @click="isVictoryModalOpen = true"
+        >
+          <HugeiconsIcon
+            :icon="Crown02Icon"
+            :size="14"
+          />
+          <span>Podium</span>
+        </button>
+
         <button
           type="button"
           class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold uppercase rounded-sm border border-border bg-surface hover:bg-slate-800 transition-colors cursor-pointer shadow-sm"
@@ -154,5 +183,13 @@ const {
     <footer class="w-full max-w-5xl pt-6 mt-6 border-t border-border/30 text-center text-xs text-neutral-500">
       Built with Nuxt 4, Vue 3 Composition API & Tailwind CSS • SOLID & Clean Architecture
     </footer>
+
+    <LudoVictoryModal
+      :is-open="isVictoryModalOpen"
+      :winners="winners"
+      :players="players"
+      @rematch="handleRematch"
+      @close="isVictoryModalOpen = false"
+    />
   </main>
 </template>
