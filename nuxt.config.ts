@@ -7,5 +7,10 @@ export default defineNuxtConfig({
   tailwindcss: {
     cssPath: ['~/assets/css/main.css', { injectPosition: 'first' }],
     configPath: 'tailwind.config.ts'
+  },
+  vite: {
+    optimizeDeps: {
+      include: ['@hugeicons/core-free-icons', '@hugeicons/vue']
+    }
   }
 })
