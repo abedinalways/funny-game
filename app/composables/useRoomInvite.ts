@@ -103,9 +103,14 @@ export const useRoomInvite = (userProfile: Ref<UserProfile>) => {
     router.replace({ query: { room: newCode } })
   }
 
-  onMounted(() => {
-    initRoom()
-  })
+  initRoom()
+
+  watch(
+    () => route.query.room,
+    () => {
+      initRoom()
+    }
+  )
 
   return {
     currentRoom,
