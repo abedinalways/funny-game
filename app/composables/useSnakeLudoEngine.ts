@@ -221,6 +221,7 @@ export function useSnakeLudoEngine() {
     toggleBot,
     resetGame,
     setPlayerName,
-    findSnakeOrLadder
+    findSnakeOrLadder,
+    addHistory
   }
 }
