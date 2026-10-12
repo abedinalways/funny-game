@@ -4,7 +4,7 @@ import type { SnakeLudoState, SnakePlayer, SnakeHistoryMessage } from '../types/
 import { SNAKES_AND_LADDERS } from '../constants/snakeLudo'
 import { useFunnySound } from './useFunnySound'
 
-export function useSnakeLudoEngine() {
+export function useSnakeLudoEngine(options?: { isBotTurnAllowed?: () => boolean }) {
   const sound = useFunnySound()
 
   const state = ref<SnakeLudoState>({
@@ -58,6 +58,7 @@ export function useSnakeLudoEngine() {
     state.value.diceValue = null
 
     if (activePlayer.value.isBot && !activePlayer.value.hasWon) {
+      if (options?.isBotTurnAllowed && !options.isBotTurnAllowed()) return
       setTimeout(() => {
         rollDice()
       }, 900)
@@ -168,6 +169,7 @@ export function useSnakeLudoEngine() {
       state.value.lastEventMessage = sixMsg
       addHistory(player.name, player.color, sixMsg, 'six')
       if (player.isBot) {
+        if (options?.isBotTurnAllowed && !options.isBotTurnAllowed()) return
         setTimeout(() => {
           rollDice()
         }, 900)

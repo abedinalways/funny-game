@@ -1,15 +1,20 @@
-interface WsSessionData {
-  roomCode?: string
-  userId?: string
-  userName?: string
-  userAvatar?: string
+interface RoomOccupant {
+  id: string
+  name: string
+  avatar: string
+  color: string
+  isHost: boolean
 }
 
 const rooms = new Map<string, {
   hostId: string
-  occupants: Map<string, { id: string; name: string; avatar: string; color?: string; isHost: boolean }>
+  occupants: Map<string, RoomOccupant>
   assignedColors: Record<string, string | null>
 }>()
+
+const peerMeta = new WeakMap<any, { roomCode: string; senderId: string }>()
+
+const COLOR_ORDER = ['red', 'green', 'yellow', 'blue'] as const
 
 export default defineWebSocketHandler({
   open(peer) {
@@ -21,7 +26,7 @@ export default defineWebSocketHandler({
       const payload = JSON.parse(rawText)
       const { type, roomCode, senderId, senderName, data } = payload
 
-      if (!roomCode) return
+      if (!roomCode || !senderId) return
 
       let room = rooms.get(roomCode)
       if (!room) {
@@ -40,18 +45,17 @@ export default defineWebSocketHandler({
 
       if (type === 'ROOM_JOIN') {
         peer.subscribe(roomCode)
+        peerMeta.set(peer, { roomCode, senderId })
 
         const isHost = room.occupants.size === 0 || room.hostId === senderId
-        if (isHost) room.hostId = senderId
+        if (isHost && !room.hostId) {
+          room.hostId = senderId
+        }
 
-        let assignedColor = Object.keys(room.assignedColors).find(
-          c => room.assignedColors[c] === senderId
-        )
+        let assignedColor = COLOR_ORDER.find(c => room!.assignedColors[c] === senderId)
 
         if (!assignedColor) {
-          const available = Object.keys(room.assignedColors).find(
-            c => room.assignedColors[c] === null
-          )
+          const available = COLOR_ORDER.find(c => room!.assignedColors[c] === null)
           if (available) {
             room.assignedColors[available] = senderId
             assignedColor = available
@@ -60,10 +64,10 @@ export default defineWebSocketHandler({
 
         room.occupants.set(senderId, {
           id: senderId,
-          name: senderName,
+          name: senderName || 'Player',
           avatar: data?.avatar || '🦁',
-          color: assignedColor,
-          isHost
+          color: assignedColor || 'red',
+          isHost: room.hostId === senderId
         })
 
         const occupantsList = Array.from(room.occupants.values())
@@ -98,9 +102,9 @@ export default defineWebSocketHandler({
       if (type === 'CLAIM_SLOT') {
         const { targetColor } = data
         if (targetColor && room.assignedColors[targetColor] === null) {
-          Object.keys(room.assignedColors).forEach(c => {
-            if (room.assignedColors[c] === senderId) {
-              room.assignedColors[c] = null
+          COLOR_ORDER.forEach(c => {
+            if (room!.assignedColors[c] === senderId) {
+              room!.assignedColors[c] = null
             }
           })
           room.assignedColors[targetColor] = senderId
@@ -134,7 +138,45 @@ export default defineWebSocketHandler({
     }
   },
   close(peer) {
-    // peer disconnected
+    const meta = peerMeta.get(peer)
+    if (!meta) return
+
+    const { roomCode, senderId } = meta
+    const room = rooms.get(roomCode)
+    if (!room) return
+
+    room.occupants.delete(senderId)
+    COLOR_ORDER.forEach(c => {
+      if (room.assignedColors[c] === senderId) {
+        room.assignedColors[c] = null
+      }
+    })
+
+    if (room.occupants.size === 0) {
+      rooms.delete(roomCode)
+      return
+    }
+
+    if (room.hostId === senderId) {
+      const nextHost = room.occupants.values().next().value
+      if (nextHost) {
+        room.hostId = nextHost.id
+        nextHost.isHost = true
+      }
+    }
+
+    const occupantsList = Array.from(room.occupants.values())
+    peer.publish(roomCode, JSON.stringify({
+      type: 'ROOM_STATE',
+      roomCode,
+      senderId: 'SYSTEM',
+      senderName: 'SYSTEM',
+      data: {
+        hostId: room.hostId,
+        occupants: occupantsList,
+        assignedColors: room.assignedColors
+      }
+    }))
   }
 })
 
