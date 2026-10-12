@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { HugeiconsIcon } from '@hugeicons/vue'
-import { Crown02Icon, RefreshIcon, VolumeHighIcon, VolumeMute01Icon, AiGameIcon, User02Icon } from '@hugeicons/core-free-icons'
+import { Crown02Icon, RefreshIcon, VolumeHighIcon, VolumeMute01Icon, AiGameIcon, User02Icon, UserAdd01Icon } from '@hugeicons/core-free-icons'
 
 import type { EmojiTauntItem } from '~/types/taunt'
 import { useEmojiTaunts } from '~/composables/useEmojiTaunts'
+import { useUserProfile } from '~/composables/useUserProfile'
+import { useRoomInvite } from '~/composables/useRoomInvite'
 
 const {
   players,
@@ -25,6 +27,31 @@ const {
   selectToken,
   resetGame,
 } = useLudoEngine()
+
+const { profile, availableAvatars, updateName, updateAvatar } = useUserProfile()
+const {
+  currentRoom,
+  inviteUrl,
+  copiedToast,
+  copyInviteLink,
+  copyRoomCode,
+  joinRoomByCode,
+  createNewRoom,
+} = useRoomInvite(profile)
+
+watch(
+  () => profile.value.name,
+  (name) => {
+    const red = players.value.find(p => p.color === 'red')
+    if (red && name) {
+      red.name = name
+    }
+  },
+  { immediate: true }
+)
+
+const isProfileModalOpen = ref(false)
+const isInviteModalOpen = ref(false)
 
 const { activeTaunts, triggerTaunt, triggerRandomBotTaunt } = useEmojiTaunts()
 
@@ -83,7 +110,31 @@ const handleRematch = () => {
         </div>
       </div>
 
-      <div class="flex items-center gap-2">
+      <div class="flex items-center gap-2 flex-wrap justify-end">
+        <!-- User Profile Pill -->
+        <button
+          type="button"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-sm border border-border bg-slate-900/90 hover:bg-slate-800 text-neutral-200 transition-colors cursor-pointer shadow-sm"
+          @click="isProfileModalOpen = true"
+        >
+          <span class="text-sm">{{ profile.avatar }}</span>
+          <span class="truncate max-w-[100px]">{{ profile.name }}</span>
+          <span class="text-[9px] font-mono text-neutral-400">({{ profile.id }})</span>
+        </button>
+
+        <!-- Invite Friends Room Button -->
+        <button
+          type="button"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-black uppercase rounded-sm border border-emerald-500/70 bg-emerald-950/60 text-emerald-300 hover:bg-emerald-900/60 transition-colors cursor-pointer shadow-sm"
+          @click="isInviteModalOpen = true"
+        >
+          <HugeiconsIcon
+            :icon="UserAdd01Icon"
+            :size="14"
+          />
+          <span>Invite ({{ currentRoom.code }})</span>
+        </button>
+
         <button
           v-if="winners.length > 0"
           type="button"
@@ -222,6 +273,28 @@ const handleRematch = () => {
       :players="players"
       @rematch="handleRematch"
       @close="isVictoryModalOpen = false"
+    />
+
+    <LudoUserProfileModal
+      :is-open="isProfileModalOpen"
+      :profile="profile"
+      :available-avatars="availableAvatars"
+      @save-name="updateName"
+      @save-avatar="updateAvatar"
+      @close="isProfileModalOpen = false"
+    />
+
+    <LudoRoomInviteModal
+      :is-open="isInviteModalOpen"
+      :room="currentRoom"
+      :invite-url="inviteUrl"
+      :copied-toast="copiedToast"
+      :profile="profile"
+      @copy-link="copyInviteLink"
+      @copy-code="copyRoomCode"
+      @join-room="joinRoomByCode"
+      @new-room="createNewRoom"
+      @close="isInviteModalOpen = false"
     />
   </main>
 </template>
