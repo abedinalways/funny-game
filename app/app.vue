@@ -181,6 +181,14 @@ onRemoteAction(async (payload) => {
     return
   }
 
+  if (payload.type === 'MODE_CHANGE') {
+    const { mode } = payload.data
+    if (mode === 'classic' || mode === 'snake') {
+      gameMode.value = mode
+    }
+    return
+  }
+
   if (payload.type === 'GAME_RESET') {
     if (payload.data?.gameMode === 'classic') {
       resetGame()
@@ -190,6 +198,11 @@ onRemoteAction(async (payload) => {
     return
   }
 })
+
+const handleSwitchGameMode = (mode: 'classic' | 'snake') => {
+  gameMode.value = mode
+  broadcastAction('MODE_CHANGE', { mode })
+}
 
 const isProfileModalOpen = ref(false)
 const isInviteModalOpen = ref(false)
@@ -228,6 +241,7 @@ watch(
 )
 
 const isVictoryModalOpen = ref(false)
+const isSnakeVictoryModalOpen = ref(false)
 
 watch(
   () => winners.value.length,
@@ -238,9 +252,23 @@ watch(
   }
 )
 
+watch(
+  () => snakeEngine.state.value.winnerQueue.length,
+  (count) => {
+    if (count > 0 && gameMode.value === 'snake') {
+      isSnakeVictoryModalOpen.value = true
+    }
+  }
+)
+
 const handleRematch = () => {
   handleLocalResetGame()
   isVictoryModalOpen.value = false
+}
+
+const handleSnakeRematch = () => {
+  handleLocalResetGame()
+  isSnakeVictoryModalOpen.value = false
 }
 </script>
 
@@ -270,7 +298,7 @@ const handleRematch = () => {
             type="button"
             class="px-3 py-1 text-xs font-bold rounded transition"
             :class="gameMode === 'classic' ? 'bg-amber-400 text-slate-950 shadow-sm' : 'text-slate-400 hover:text-slate-200'"
-            @click="gameMode = 'classic'"
+            @click="handleSwitchGameMode('classic')"
           >
             🎲 ক্লাসিক লুডু
           </button>
@@ -278,7 +306,7 @@ const handleRematch = () => {
             type="button"
             class="px-3 py-1 text-xs font-bold rounded transition"
             :class="gameMode === 'snake' ? 'bg-emerald-500 text-slate-950 shadow-sm' : 'text-slate-400 hover:text-slate-200'"
-            @click="gameMode = 'snake'"
+            @click="handleSwitchGameMode('snake')"
           >
             🐍 সাপ-লুডু (Snakes)
           </button>
@@ -319,6 +347,19 @@ const handleRematch = () => {
             :size="14"
           />
           <span>Podium</span>
+        </button>
+
+        <button
+          v-else-if="gameMode === 'snake' && snakeEngine.state.value.winnerQueue.length > 0"
+          type="button"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold uppercase rounded-sm border border-emerald-400/80 bg-emerald-400/20 text-emerald-300 hover:bg-emerald-400/30 transition-colors cursor-pointer shadow-sm animate-pulse"
+          @click="isSnakeVictoryModalOpen = true"
+        >
+          <HugeiconsIcon
+            :icon="Crown02Icon"
+            :size="14"
+          />
+          <span>Snake Podium</span>
         </button>
 
         <button
@@ -476,6 +517,14 @@ const handleRematch = () => {
       :players="players"
       @rematch="handleRematch"
       @close="isVictoryModalOpen = false"
+    />
+
+    <SnakeludoSnakeVictoryModal
+      :is-open="isSnakeVictoryModalOpen"
+      :winner-queue="snakeEngine.state.value.winnerQueue"
+      :players="snakeEngine.state.value.players"
+      @rematch="handleSnakeRematch"
+      @close="isSnakeVictoryModalOpen = false"
     />
 
     <LudoUserProfileModal

@@ -166,3 +166,4 @@ export function useMultiplayerSync(profile: Ref<UserProfile>, roomCode: Ref<stri
     onRemoteAction
   }
 }
+
