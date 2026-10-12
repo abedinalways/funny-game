@@ -9,10 +9,12 @@ const props = withDefaults(
     canMoveTokenIds: string[]
     movingTokenId?: string | null
     destinationMap?: Map<string, { token: Token; color: PlayerColor }>
+    myColor?: PlayerColor | null
   }>(),
   {
     movingTokenId: null,
     destinationMap: () => new Map(),
+    myColor: null,
   }
 )
 
@@ -89,6 +91,7 @@ const getCellDestinationColor = (row: number, col: number): PlayerColor => {
           :tokens="getPlayer('red').tokens"
           :active-player-color="activePlayerColor"
           :can-move-token-ids="canMoveTokenIds"
+          :my-color="myColor"
           @select-token="emit('selectToken', $event)"
         />
       </div>
@@ -109,6 +112,7 @@ const getCellDestinationColor = (row: number, col: number): PlayerColor => {
           :tokens="getPlayer('green').tokens"
           :active-player-color="activePlayerColor"
           :can-move-token-ids="canMoveTokenIds"
+          :my-color="myColor"
           @select-token="emit('selectToken', $event)"
         />
       </div>
@@ -129,6 +133,7 @@ const getCellDestinationColor = (row: number, col: number): PlayerColor => {
           :tokens="getPlayer('yellow').tokens"
           :active-player-color="activePlayerColor"
           :can-move-token-ids="canMoveTokenIds"
+          :my-color="myColor"
           @select-token="emit('selectToken', $event)"
         />
       </div>
@@ -149,6 +154,7 @@ const getCellDestinationColor = (row: number, col: number): PlayerColor => {
           :tokens="getPlayer('blue').tokens"
           :active-player-color="activePlayerColor"
           :can-move-token-ids="canMoveTokenIds"
+          :my-color="myColor"
           @select-token="emit('selectToken', $event)"
         />
       </div>
