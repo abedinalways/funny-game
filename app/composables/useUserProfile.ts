@@ -16,7 +16,7 @@ const FUNNY_AVATARS = ['🐯', '👑', '🎲', '🚀', '🦁', '⚡', '🔥']
 
 export const useUserProfile = () => {
   const profile = ref<UserProfile>({
-    id: 'USR-TEMP',
+    id: `USR-${Math.random().toString(36).substring(2, 7).toUpperCase()}`,
     name: 'প্লেয়ার ১',
     avatar: '👑',
     createdAt: Date.now(),
@@ -70,6 +70,10 @@ export const useUserProfile = () => {
     if (typeof window !== 'undefined') {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(profile.value))
     }
+  }
+
+  if (typeof window !== 'undefined') {
+    loadProfile()
   }
 
   onMounted(() => {
