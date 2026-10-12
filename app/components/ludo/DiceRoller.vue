@@ -17,11 +17,15 @@ const props = withDefaults(
     rolling: boolean
     activeColor: PlayerColor
     canRoll: boolean
+    myColor?: PlayerColor | null
+    activePlayerName?: string
   }>(),
   {
     value: null,
     rolling: false,
     canRoll: true,
+    myColor: null,
+    activePlayerName: '',
   }
 )
 
@@ -93,7 +97,9 @@ const handleRoll = () => {
         :disabled="!canRoll || rolling"
         @click="handleRoll"
       >
-        {{ rolling ? 'ঘুরছে...' : '🎲 ডাইস রোল করুন' }}
+        <span v-if="rolling">ঘুরছে...</span>
+        <span v-else-if="!canRoll && myColor && myColor !== activeColor">অপেক্ষা করুন... ({{ activePlayerName || activeColor }}-এর চাল)</span>
+        <span v-else>🎲 ডাইস রোল করুন</span>
       </button>
     </div>
   </div>

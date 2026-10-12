@@ -13,30 +13,6 @@ import { useMultiplayerSync } from '~/composables/useMultiplayerSync'
 
 const gameMode = ref<'classic' | 'snake'>('classic')
 
-const {
-  players,
-  activePlayerColor,
-  activePlayer,
-  diceValue,
-  isRolling,
-  phase,
-  canMoveTokenIds,
-  destinationMap,
-  canRollDice,
-  movingTokenId,
-  winners,
-  history,
-  isMuted,
-  toggleMute,
-  togglePlayerBot,
-  rollDice,
-  selectToken,
-  resetGame,
-  addFunnyMessage,
-} = useLudoEngine()
-
-const snakeEngine = useSnakeLudoEngine()
-
 const { profile, availableAvatars, updateName, updateAvatar } = useUserProfile()
 const {
   currentRoom,
@@ -61,16 +37,46 @@ const {
   onRemoteAction,
 } = useMultiplayerSync(profile, roomCodeRef)
 
+const isBotTurnAllowed = () => {
+  if (!isConnected.value) return true
+  return isHost.value
+}
+
+const {
+  players,
+  activePlayerColor,
+  activePlayer,
+  diceValue,
+  isRolling,
+  phase,
+  canMoveTokenIds,
+  destinationMap,
+  canRollDice,
+  movingTokenId,
+  winners,
+  history,
+  isMuted,
+  toggleMute,
+  togglePlayerBot,
+  rollDice,
+  selectToken,
+  resetGame,
+  addFunnyMessage,
+} = useLudoEngine({ isBotTurnAllowed })
+
+const snakeEngine = useSnakeLudoEngine({ isBotTurnAllowed })
+
 watch(
-  () => profile.value.name,
-  (name) => {
-    const assigned = myAssignedColor.value || 'red'
-    const player = players.value.find(p => p.color === assigned)
-    if (player && name) {
-      player.name = name
-    }
-    if (name) {
-      snakeEngine.setPlayerName(assigned, name, profile.value.avatar)
+  [() => profile.value.name, () => myAssignedColor.value],
+  ([name, assigned]) => {
+    if (!name) return
+    const targetColor = isConnected.value ? assigned : 'red'
+    if (targetColor) {
+      const player = players.value.find(p => p.color === targetColor)
+      if (player) {
+        player.name = name
+      }
+      snakeEngine.setPlayerName(targetColor, name, profile.value.avatar)
     }
   },
   { immediate: true }
@@ -114,8 +120,25 @@ watch(
   { deep: true }
 )
 
+const isMyClassicTurn = computed(() => {
+  if (!isConnected.value) return true
+  if (!myAssignedColor.value) return false
+  return activePlayerColor.value === myAssignedColor.value
+})
+
+const isMySnakeTurn = computed(() => {
+  if (!isConnected.value) return true
+  if (!myAssignedColor.value) return false
+  return snakeEngine.activePlayer.value.color === myAssignedColor.value
+})
+
+const canUserRollDice = computed(() => {
+  return canRollDice.value && isMyClassicTurn.value
+})
+
 const handleLocalRollDice = async () => {
   if (gameMode.value === 'classic') {
+    if (!isMyClassicTurn.value) return
     const rolled = await rollDice()
     if (rolled) {
       broadcastAction('PLAYER_ACTION_ROLL', {
@@ -125,6 +148,7 @@ const handleLocalRollDice = async () => {
       })
     }
   } else {
+    if (!isMySnakeTurn.value) return
     await snakeEngine.rollDice()
     if (snakeEngine.state.value.diceValue) {
       broadcastAction('PLAYER_ACTION_ROLL', {
@@ -137,6 +161,9 @@ const handleLocalRollDice = async () => {
 }
 
 const handleLocalSelectToken = async (token: Token) => {
+  if (isConnected.value && myAssignedColor.value && token.color !== myAssignedColor.value) {
+    return
+  }
   broadcastAction('PLAYER_ACTION_MOVE', {
     tokenId: token.id,
     color: token.color,
@@ -427,6 +454,7 @@ const handleSnakeRematch = () => {
             :can-move-token-ids="canMoveTokenIds"
             :moving-token-id="movingTokenId"
             :destination-map="destinationMap"
+            :my-color="myAssignedColor"
             @select-token="handleLocalSelectToken"
           />
           <LudoFloatingTauntOverlay :taunts="activeTaunts" />
@@ -442,7 +470,9 @@ const handleSnakeRematch = () => {
           :value="diceValue"
           :rolling="isRolling"
           :active-color="activePlayerColor"
-          :can-roll="canRollDice"
+          :can-roll="canUserRollDice"
+          :my-color="myAssignedColor"
+          :active-player-name="activePlayer.name"
           @roll="handleLocalRollDice"
         />
 
@@ -533,6 +563,7 @@ const handleSnakeRematch = () => {
           :is-rolling="snakeEngine.state.value.isRolling"
           :is-game-over="snakeEngine.state.value.isGameOver"
           :history="snakeEngine.state.value.history"
+          :my-color="myAssignedColor"
           @roll="handleLocalRollDice"
           @reset="handleLocalResetGame"
           @toggle-bot="snakeEngine.toggleBot"
