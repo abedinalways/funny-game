@@ -122,3 +122,4 @@ export const SNAKES_AND_LADDERS: SnakeOrLadder[] = [
     trollMessage: 'জিততে মাত্র ১ ঘর বাকি ছিল! ৯৯ তে কালনাগিনীর ছোবলে সোজা ৭৮!'
   }
 ]
+
