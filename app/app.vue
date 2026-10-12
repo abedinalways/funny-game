@@ -1,13 +1,15 @@
 <script setup lang="ts">
-import { ref, watch } from 'vue'
+import { ref, computed, watch } from 'vue'
 import { HugeiconsIcon } from '@hugeicons/vue'
 import { Crown02Icon, RefreshIcon, VolumeHighIcon, VolumeMute01Icon, AiGameIcon, User02Icon, UserAdd01Icon } from '@hugeicons/core-free-icons'
 
+import type { PlayerColor, Token } from '~/types/ludo'
 import type { EmojiTauntItem } from '~/types/taunt'
 import { useEmojiTaunts } from '~/composables/useEmojiTaunts'
 import { useUserProfile } from '~/composables/useUserProfile'
 import { useRoomInvite } from '~/composables/useRoomInvite'
 import { useSnakeLudoEngine } from '~/composables/useSnakeLudoEngine'
+import { useMultiplayerSync } from '~/composables/useMultiplayerSync'
 
 const gameMode = ref<'classic' | 'snake'>('classic')
 
@@ -45,19 +47,149 @@ const {
   createNewRoom,
 } = useRoomInvite(profile)
 
+const roomCodeRef = computed(() => currentRoom.value.code)
+const {
+  isConnected,
+  isReconnecting,
+  myAssignedColor,
+  isHost,
+  roomOccupants,
+  assignedColors,
+  broadcastAction,
+  claimSlot,
+  onRemoteAction,
+} = useMultiplayerSync(profile, roomCodeRef)
+
 watch(
   () => profile.value.name,
   (name) => {
-    const red = players.value.find(p => p.color === 'red')
-    if (red && name) {
-      red.name = name
+    const assigned = myAssignedColor.value || 'red'
+    const player = players.value.find(p => p.color === assigned)
+    if (player && name) {
+      player.name = name
     }
     if (name) {
-      snakeEngine.setPlayerName('red', name, profile.value.avatar)
+      snakeEngine.setPlayerName(assigned, name, profile.value.avatar)
     }
   },
   { immediate: true }
 )
+
+watch(
+  () => assignedColors.value,
+  (slots) => {
+    if (!slots) return
+    const occupants = roomOccupants.value || []
+
+    ;(Object.keys(slots) as PlayerColor[]).forEach((color) => {
+      const occupantId = slots[color]
+      const classicPlayer = players.value.find(p => p.color === color)
+      const snakePlayer = snakeEngine.state.value.players.find(p => p.color === color)
+
+      if (occupantId) {
+        const occ = occupants.find(o => o.id === occupantId)
+        const occName = occ?.name || (occupantId === profile.value.id ? profile.value.name : color.toUpperCase())
+        const occAvatar = occ?.avatar || '🦁'
+
+        if (classicPlayer) {
+          classicPlayer.name = occName
+          classicPlayer.isBot = false
+        }
+        if (snakePlayer) {
+          snakePlayer.name = occName
+          snakePlayer.avatar = occAvatar
+          snakePlayer.isBot = false
+        }
+      } else {
+        if (classicPlayer && color !== myAssignedColor.value) {
+          classicPlayer.isBot = true
+        }
+        if (snakePlayer && color !== myAssignedColor.value) {
+          snakePlayer.isBot = true
+        }
+      }
+    })
+  },
+  { deep: true }
+)
+
+const handleLocalRollDice = async () => {
+  if (gameMode.value === 'classic') {
+    const rolled = await rollDice()
+    if (rolled) {
+      broadcastAction('PLAYER_ACTION_ROLL', {
+        gameMode: 'classic',
+        rolledValue: rolled,
+        activeColor: activePlayerColor.value,
+      })
+    }
+  } else {
+    await snakeEngine.rollDice()
+    if (snakeEngine.state.value.diceValue) {
+      broadcastAction('PLAYER_ACTION_ROLL', {
+        gameMode: 'snake',
+        rolledValue: snakeEngine.state.value.diceValue,
+        activeColor: snakeEngine.activePlayer.value.color,
+      })
+    }
+  }
+}
+
+const handleLocalSelectToken = async (token: Token) => {
+  broadcastAction('PLAYER_ACTION_MOVE', {
+    tokenId: token.id,
+    color: token.color,
+  })
+  await selectToken(token)
+}
+
+const handleLocalResetGame = () => {
+  if (gameMode.value === 'classic') {
+    resetGame()
+  } else {
+    snakeEngine.resetGame()
+  }
+  broadcastAction('GAME_RESET', { gameMode: gameMode.value })
+}
+
+onRemoteAction(async (payload) => {
+  if (payload.senderId === profile.value.id) return
+
+  if (payload.type === 'PLAYER_ACTION_ROLL') {
+    const { rolledValue, gameMode: remoteMode } = payload.data
+    if (remoteMode === 'classic') {
+      await rollDice(rolledValue)
+    } else {
+      await snakeEngine.rollDice(rolledValue)
+    }
+    return
+  }
+
+  if (payload.type === 'PLAYER_ACTION_MOVE') {
+    const { tokenId, color } = payload.data
+    const player = players.value.find(p => p.color === color)
+    const token = player?.tokens.find(t => t.id === tokenId)
+    if (token) {
+      await selectToken(token)
+    }
+    return
+  }
+
+  if (payload.type === 'PLAYER_TAUNT') {
+    const { taunt, color, senderName } = payload.data
+    triggerTaunt(taunt, color, senderName)
+    return
+  }
+
+  if (payload.type === 'GAME_RESET') {
+    if (payload.data?.gameMode === 'classic') {
+      resetGame()
+    } else {
+      snakeEngine.resetGame()
+    }
+    return
+  }
+})
 
 const isProfileModalOpen = ref(false)
 const isInviteModalOpen = ref(false)
@@ -65,11 +197,20 @@ const isInviteModalOpen = ref(false)
 const { activeTaunts, triggerTaunt, triggerRandomBotTaunt } = useEmojiTaunts()
 
 const handleSendTaunt = (taunt: EmojiTauntItem) => {
-  if (gameMode.value === 'classic') {
-    triggerTaunt(taunt, activePlayerColor.value, activePlayer.value.name)
-  } else {
-    triggerTaunt(taunt, snakeEngine.activePlayer.value.color, snakeEngine.activePlayer.value.name)
-  }
+  const currentColor = gameMode.value === 'classic'
+    ? activePlayerColor.value
+    : snakeEngine.activePlayer.value.color
+  const currentName = gameMode.value === 'classic'
+    ? activePlayer.value.name
+    : snakeEngine.activePlayer.value.name
+
+  triggerTaunt(taunt, currentColor, currentName)
+
+  broadcastAction('PLAYER_TAUNT', {
+    taunt,
+    color: currentColor,
+    senderName: currentName,
+  })
 }
 
 watch(
@@ -98,7 +239,7 @@ watch(
 )
 
 const handleRematch = () => {
-  resetGame()
+  handleLocalResetGame()
   isVictoryModalOpen.value = false
 }
 </script>
@@ -155,7 +296,8 @@ const handleRematch = () => {
 
         <button
           type="button"
-          class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-black uppercase rounded-sm border border-emerald-500/70 bg-emerald-950/60 text-emerald-300 hover:bg-emerald-900/60 transition-colors cursor-pointer shadow-sm"
+          class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-black uppercase rounded-sm border transition-colors cursor-pointer shadow-sm"
+          :class="isConnected ? 'border-emerald-500/70 bg-emerald-950/60 text-emerald-300 hover:bg-emerald-900/60' : 'border-amber-500/70 bg-amber-950/60 text-amber-300'"
           @click="isInviteModalOpen = true"
         >
           <HugeiconsIcon
@@ -163,6 +305,7 @@ const handleRematch = () => {
             :size="14"
           />
           <span>Invite ({{ currentRoom.code }})</span>
+          <span v-if="isConnected" class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
         </button>
 
         <button
@@ -194,7 +337,7 @@ const handleRematch = () => {
         <button
           type="button"
           class="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-bold uppercase rounded-sm border border-border bg-surface hover:bg-slate-800 transition-colors cursor-pointer shadow-sm"
-          @click="gameMode === 'classic' ? resetGame() : snakeEngine.resetGame()"
+          @click="handleLocalResetGame"
         >
           <HugeiconsIcon
             :icon="RefreshIcon"
@@ -214,7 +357,7 @@ const handleRematch = () => {
             :can-move-token-ids="canMoveTokenIds"
             :moving-token-id="movingTokenId"
             :destination-map="destinationMap"
-            @select-token="selectToken"
+            @select-token="handleLocalSelectToken"
           />
           <LudoFloatingTauntOverlay :taunts="activeTaunts" />
         </div>
@@ -230,7 +373,7 @@ const handleRematch = () => {
           :rolling="isRolling"
           :active-color="activePlayerColor"
           :can-roll="canRollDice"
-          @roll="rollDice"
+          @roll="handleLocalRollDice"
         />
 
         <div class="grid grid-cols-2 gap-2">
@@ -316,8 +459,8 @@ const handleRematch = () => {
           :is-rolling="snakeEngine.state.value.isRolling"
           :is-game-over="snakeEngine.state.value.isGameOver"
           :history="snakeEngine.state.value.history"
-          @roll="snakeEngine.rollDice"
-          @reset="snakeEngine.resetGame"
+          @roll="handleLocalRollDice"
+          @reset="handleLocalResetGame"
           @toggle-bot="snakeEngine.toggleBot"
         />
       </div>
@@ -350,6 +493,12 @@ const handleRematch = () => {
       :invite-url="inviteUrl"
       :copied-toast="copiedToast"
       :profile="profile"
+      :is-connected="isConnected"
+      :is-reconnecting="isReconnecting"
+      :my-assigned-color="myAssignedColor"
+      :room-occupants="roomOccupants"
+      :assigned-colors="assignedColors"
+      @claim-slot="claimSlot"
       @copy-link="copyInviteLink"
       @copy-code="copyRoomCode"
       @join-room="joinRoomByCode"

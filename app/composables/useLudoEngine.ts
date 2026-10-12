@@ -131,8 +131,8 @@ export const useLudoEngine = () => {
     }
   }
 
-  const rollDice = async (): Promise<number> => {
-    if (!canRollDice.value) return 0
+  const rollDice = async (forcedRoll?: number): Promise<number> => {
+    if (!forcedRoll && !canRollDice.value) return 0
 
     isRolling.value = true
     phase.value = 'rolling'
@@ -140,7 +140,7 @@ export const useLudoEngine = () => {
 
     await new Promise(resolve => setTimeout(resolve, 600))
 
-    const rolled = Math.floor(Math.random() * 6) + 1
+    const rolled = forcedRoll || (Math.floor(Math.random() * 6) + 1)
     diceValue.value = rolled
     isRolling.value = false
 
