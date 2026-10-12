@@ -7,6 +7,7 @@ const props = defineProps<{
   tokens: Token[]
   activePlayerColor: PlayerColor
   canMoveTokenIds: string[]
+  myColor?: PlayerColor | null
 }>()
 
 const emit = defineEmits<{
@@ -40,6 +41,7 @@ const baseBgStyles: Record<PlayerColor, { bg: string; border: string; accent: st
   },
 }
 
+const isMyCourt = computed(() => props.myColor ? props.color === props.myColor : false)
 const isMyTurn = computed(() => props.activePlayerColor === props.color)
 
 const getSlotToken = (index: number): Token | undefined => {
@@ -57,12 +59,20 @@ const getSlotToken = (index: number): Token | undefined => {
     ]"
   >
     <div class="flex items-center justify-between px-0.5 sm:px-1">
-      <span
-        class="text-[9px] sm:text-xs md:text-sm font-black uppercase tracking-wider px-1 sm:px-2 py-0.2 sm:py-0.5 rounded-sm shadow-md truncate max-w-[68px] sm:max-w-[120px]"
-        :class="baseBgStyles[color].accent"
-      >
-        {{ playerName }}
-      </span>
+      <div class="flex items-center gap-1 min-w-0">
+        <span
+          class="text-[9px] sm:text-xs md:text-sm font-black uppercase tracking-wider px-1 sm:px-2 py-0.2 sm:py-0.5 rounded-sm shadow-md truncate max-w-[68px] sm:max-w-[120px]"
+          :class="baseBgStyles[color].accent"
+        >
+          {{ playerName }}
+        </span>
+        <span
+          v-if="isMyCourt"
+          class="text-[7px] sm:text-[9px] font-black uppercase bg-white/20 text-white px-1 py-0.2 rounded-sm border border-white/30"
+        >
+          আপনি
+        </span>
+      </div>
       <span
         v-if="isMyTurn"
         class="text-[8px] sm:text-[10px] md:text-xs font-black text-amber-300 animate-pulse uppercase tracking-wider bg-amber-400/20 px-1 sm:px-2 py-0.2 sm:py-0.5 rounded-sm border border-amber-400/40"
