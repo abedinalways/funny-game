@@ -71,8 +71,8 @@ const getCellDestinationColor = (row: number, col: number): PlayerColor => {
 </script>
 
 <template>
-  <div class="relative w-full max-w-[560px] aspect-square mx-auto p-2 bg-canvas rounded-sm border-2 border-border shadow-2xl">
-    <div class="grid grid-cols-15 grid-rows-15 w-full h-full gap-[1px] bg-border/20 rounded-sm overflow-hidden">
+  <div class="relative w-full max-w-[720px] aspect-square mx-auto p-2.5 sm:p-4 bg-slate-950 rounded-sm border-4 border-border shadow-2xl ring-1 ring-white/10">
+    <div class="grid grid-cols-15 grid-rows-15 w-full h-full gap-[1.5px] bg-border/40 rounded-sm overflow-hidden p-0.5">
       <!-- Red Home Base (Rows 1-6, Cols 1-6) -->
       <div class="col-start-1 col-end-7 row-start-1 row-end-7 z-10">
         <LudoHomeBase
