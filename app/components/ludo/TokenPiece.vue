@@ -19,42 +19,46 @@ const emit = defineEmits<{
   (e: 'select', token: Token): void
 }>()
 
-const colorStyles: Record<PlayerColor, { bg: string; border: string; glow: string; text: string }> = {
+const colorStyles: Record<PlayerColor, { bg: string; border: string; glow: string; text: string; ring: string }> = {
   red: {
-    bg: 'bg-ludo-red',
-    border: 'border-ludo-red-dark',
-    glow: 'shadow-[0_0_12px_var(--color-ludo-red)]',
-    text: 'text-ludo-red-light',
+    bg: 'bg-gradient-to-br from-red-400 via-ludo-red to-red-700',
+    border: 'border-red-900',
+    glow: 'shadow-[0_0_16px_rgba(239,68,68,0.9)] ring-2 ring-red-300',
+    text: 'text-white',
+    ring: 'border-red-200/60',
   },
   green: {
-    bg: 'bg-ludo-green',
-    border: 'border-ludo-green-dark',
-    glow: 'shadow-[0_0_12px_var(--color-ludo-green)]',
-    text: 'text-ludo-green-light',
+    bg: 'bg-gradient-to-br from-emerald-300 via-ludo-green to-emerald-800',
+    border: 'border-emerald-950',
+    glow: 'shadow-[0_0_16px_rgba(34,197,94,0.9)] ring-2 ring-emerald-300',
+    text: 'text-white',
+    ring: 'border-emerald-200/60',
   },
   yellow: {
-    bg: 'bg-ludo-yellow',
-    border: 'border-ludo-yellow-dark',
-    glow: 'shadow-[0_0_12px_var(--color-ludo-yellow)]',
-    text: 'text-ludo-yellow-light',
+    bg: 'bg-gradient-to-br from-yellow-200 via-ludo-yellow to-amber-700',
+    border: 'border-amber-950',
+    glow: 'shadow-[0_0_16px_rgba(234,179,8,0.9)] ring-2 ring-yellow-200',
+    text: 'text-slate-950 font-black',
+    ring: 'border-yellow-950/40',
   },
   blue: {
-    bg: 'bg-ludo-blue',
-    border: 'border-ludo-blue-dark',
-    glow: 'shadow-[0_0_12px_var(--color-ludo-blue)]',
-    text: 'text-ludo-blue-light',
+    bg: 'bg-gradient-to-br from-sky-300 via-ludo-blue to-blue-800',
+    border: 'border-blue-950',
+    glow: 'shadow-[0_0_16px_rgba(59,130,246,0.9)] ring-2 ring-sky-300',
+    text: 'text-white',
+    ring: 'border-blue-200/60',
   },
 }
 
 const sizeClasses = computed(() => {
   switch (props.size) {
     case 'sm':
-      return 'w-5 h-5 text-[10px]'
+      return 'w-6 h-6 text-[10px]'
     case 'lg':
-      return 'w-9 h-9 text-sm'
+      return 'w-11 h-11 text-sm'
     case 'md':
     default:
-      return 'w-7 h-7 text-xs'
+      return 'w-8 h-8 md:w-9 md:h-9 text-xs'
   }
 })
 
@@ -68,22 +72,27 @@ const handleClick = () => {
 <template>
   <button
     type="button"
-    class="relative inline-flex items-center justify-center font-bold transition-all duration-200 select-none rounded-sm border-2 shadow-md cursor-pointer"
+    class="relative inline-flex items-center justify-center font-black transition-all duration-200 select-none rounded-sm border-2 shadow-lg cursor-pointer transform"
     :class="[
       sizeClasses,
       colorStyles[token.color].bg,
       colorStyles[token.color].border,
-      canMove ? `${colorStyles[token.color].glow} animate-bounce scale-110 z-20` : 'hover:scale-105',
-      isMoving ? 'animate-pulse' : '',
+      canMove ? `${colorStyles[token.color].glow} animate-bounce scale-110 z-30 ring-offset-2 ring-offset-slate-950` : 'hover:scale-105',
+      isMoving ? 'animate-pulse scale-125 z-40' : '',
     ]"
     :disabled="!canMove"
     @click="handleClick"
   >
     <span
-      class="w-3/5 h-3/5 rounded-sm border border-white/40 flex items-center justify-center bg-black/15 shadow-inner"
-      :class="colorStyles[token.color].text"
+      class="w-3/5 h-3/5 rounded-sm border flex items-center justify-center bg-black/20 shadow-inner"
+      :class="[colorStyles[token.color].ring, colorStyles[token.color].text]"
     >
       {{ token.index + 1 }}
     </span>
+
+    <span
+      v-if="canMove"
+      class="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-sm bg-amber-400 border border-slate-950 animate-ping"
+    />
   </button>
 </template>

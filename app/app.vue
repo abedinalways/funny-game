@@ -64,17 +64,17 @@ const handleRematch = () => {
 </script>
 
 <template>
-  <main class="min-h-screen bg-canvas text-neutral-50 px-3 py-6 flex flex-col items-center justify-between">
-    <header class="w-full max-w-5xl flex items-center justify-between pb-4 border-b border-border/50 mb-6">
+  <main class="min-h-screen bg-canvas text-neutral-50 px-3 sm:px-6 py-6 flex flex-col items-center justify-between">
+    <header class="w-full max-w-7xl flex items-center justify-between pb-4 border-b border-border/50 mb-6">
       <div class="flex items-center gap-3">
-        <div class="w-9 h-9 rounded-sm bg-amber-400 text-slate-950 flex items-center justify-center shadow-md">
+        <div class="w-10 h-10 rounded-sm bg-gradient-to-br from-amber-300 to-amber-500 text-slate-950 flex items-center justify-center shadow-lg">
           <HugeiconsIcon
             :icon="Crown02Icon"
-            :size="22"
+            :size="24"
           />
         </div>
         <div>
-          <h1 class="text-lg md:text-xl font-black uppercase tracking-wider text-neutral-50">
+          <h1 class="text-xl md:text-2xl font-black uppercase tracking-wider text-neutral-50">
             Funny Ludo Mania
           </h1>
           <p class="text-xs text-neutral-400">
@@ -124,9 +124,9 @@ const handleRematch = () => {
       </div>
     </header>
 
-    <div class="w-full max-w-5xl grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-      <div class="lg:col-span-7 flex flex-col items-center w-full">
-        <div class="relative w-full">
+    <div class="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <div class="lg:col-span-7 xl:col-span-8 flex flex-col items-center w-full">
+        <div class="relative w-full flex justify-center">
           <LudoGameBoard
             :players="players"
             :active-player-color="activePlayerColor"
@@ -138,12 +138,12 @@ const handleRematch = () => {
           <LudoFloatingTauntOverlay :taunts="activeTaunts" />
         </div>
 
-        <div class="w-full max-w-[560px] mt-3">
+        <div class="w-full max-w-[720px] mt-4">
           <LudoEmojiTauntPicker @select="handleSendTaunt" />
         </div>
       </div>
 
-      <div class="lg:col-span-5 flex flex-col gap-4 w-full">
+      <div class="lg:col-span-5 xl:col-span-4 flex flex-col gap-4 w-full">
         <LudoDiceRoller
           :value="diceValue"
           :rolling="isRolling"
