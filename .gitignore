@@ -10,6 +10,7 @@ dist
 node_modules
 
 # Logs
+temp_auto_push.bat
 logs
 *.log
 
@@ -23,3 +24,5 @@ logs
 .env.*
 !.env.example
 .vercel
+.gitignore
+branch_structure.json

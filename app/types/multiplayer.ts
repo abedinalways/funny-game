@@ -10,6 +10,7 @@ export type WsMessageType =
   | 'PLAYER_ACTION_MOVE'
   | 'PLAYER_TAUNT'
   | 'GAME_RESET'
+  | 'MODE_CHANGE'
   | 'CHAT_MESSAGE'
 
 export interface WsMessagePayload {
@@ -34,3 +35,4 @@ export interface WsRoomData {
   occupants: Record<string, RoomOccupant>
   assignedColors: Record<PlayerColor, string | null> // playerColor -> userId
 }
+
