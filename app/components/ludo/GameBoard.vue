@@ -74,7 +74,15 @@ const getCellDestinationColor = (row: number, col: number): PlayerColor => {
   <div class="relative w-full max-w-[720px] aspect-square mx-auto p-2.5 sm:p-4 bg-slate-950 rounded-sm border-4 border-border shadow-2xl ring-1 ring-white/10">
     <div class="grid grid-cols-15 grid-rows-15 w-full h-full gap-[1.5px] bg-border/40 rounded-sm overflow-hidden p-0.5">
       <!-- Red Home Base (Rows 1-6, Cols 1-6) -->
-      <div class="col-start-1 col-end-7 row-start-1 row-end-7 z-10">
+      <div
+        :style="{
+          gridColumnStart: 1,
+          gridColumnEnd: 7,
+          gridRowStart: 1,
+          gridRowEnd: 7,
+        }"
+        class="z-10 w-full h-full"
+      >
         <LudoHomeBase
           color="red"
           :player-name="getPlayer('red').name"
@@ -86,7 +94,15 @@ const getCellDestinationColor = (row: number, col: number): PlayerColor => {
       </div>
 
       <!-- Green Home Base (Rows 1-6, Cols 10-15) -->
-      <div class="col-start-10 col-end-16 row-start-1 row-end-7 z-10">
+      <div
+        :style="{
+          gridColumnStart: 10,
+          gridColumnEnd: 16,
+          gridRowStart: 1,
+          gridRowEnd: 7,
+        }"
+        class="z-10 w-full h-full"
+      >
         <LudoHomeBase
           color="green"
           :player-name="getPlayer('green').name"
@@ -98,7 +114,15 @@ const getCellDestinationColor = (row: number, col: number): PlayerColor => {
       </div>
 
       <!-- Yellow Home Base (Rows 10-15, Cols 10-15) -->
-      <div class="col-start-10 col-end-16 row-start-10 row-end-16 z-10">
+      <div
+        :style="{
+          gridColumnStart: 10,
+          gridColumnEnd: 16,
+          gridRowStart: 10,
+          gridRowEnd: 16,
+        }"
+        class="z-10 w-full h-full"
+      >
         <LudoHomeBase
           color="yellow"
           :player-name="getPlayer('yellow').name"
@@ -110,7 +134,15 @@ const getCellDestinationColor = (row: number, col: number): PlayerColor => {
       </div>
 
       <!-- Blue Home Base (Rows 10-15, Cols 1-6) -->
-      <div class="col-start-1 col-end-7 row-start-10 row-end-16 z-10">
+      <div
+        :style="{
+          gridColumnStart: 1,
+          gridColumnEnd: 7,
+          gridRowStart: 10,
+          gridRowEnd: 16,
+        }"
+        class="z-10 w-full h-full"
+      >
         <LudoHomeBase
           color="blue"
           :player-name="getPlayer('blue').name"
@@ -122,7 +154,15 @@ const getCellDestinationColor = (row: number, col: number): PlayerColor => {
       </div>
 
       <!-- Center Goal (Rows 7-9, Cols 7-9) -->
-      <div class="col-start-7 col-end-10 row-start-7 row-end-10 z-10">
+      <div
+        :style="{
+          gridColumnStart: 7,
+          gridColumnEnd: 10,
+          gridRowStart: 7,
+          gridRowEnd: 10,
+        }"
+        class="z-10 w-full h-full"
+      >
         <LudoCenterGoal :finished-counts="finishedCounts" />
       </div>
 
