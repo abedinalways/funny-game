@@ -16,14 +16,24 @@
           class="relative w-24 h-24 rounded-xl flex items-center justify-center text-4xl font-extrabold shadow-2xl transition-all duration-200 border-2"
           :class="[
             getDiceColorClass(activePlayer.color),
-            isRolling ? 'animate-spin scale-95 ring-4 ring-amber-400' : 'hover:scale-105 active:scale-95 cursor-pointer',
+            isRolling ? 'scale-95 ring-4 ring-amber-400 cursor-wait' : 'hover:scale-105 active:scale-95 cursor-pointer',
             isGameOver ? 'opacity-50 cursor-not-allowed' : ''
           ]"
           :disabled="isRolling || isGameOver || activePlayer.isBot"
           @click="$emit('roll')"
         >
-          <span v-if="diceValue !== null" class="font-mono text-5xl">{{ diceValue }}</span>
-          <span v-else class="text-3xl opacity-80">🎲</span>
+          <HugeiconsIcon
+            :icon="currentDiceIcon"
+            :size="54"
+            :class="[isRolling ? 'animate-spin opacity-70' : '']"
+          />
+
+          <span
+            v-if="diceValue !== null && !isRolling"
+            class="absolute -top-2 -right-2 w-7 h-7 rounded-sm bg-amber-400 border border-slate-950 text-slate-950 text-sm font-black flex items-center justify-center shadow-lg animate-bounce"
+          >
+            {{ diceValue }}
+          </span>
         </button>
 
         <p class="mt-3 text-xs text-center font-bold" :class="isRolling ? 'text-amber-400 animate-pulse' : 'text-neutral-300'">
@@ -120,6 +130,17 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+import { HugeiconsIcon } from '@hugeicons/vue'
+import {
+  Dice,
+  Dice1,
+  Dice2,
+  Dice3,
+  Dice4,
+  Dice5,
+  Dice6,
+} from '@hugeicons/core-free-icons'
 import type { PlayerColor } from '~/types/ludo'
 import type { SnakePlayer, SnakeHistoryMessage } from '~/types/snakeLudo'
 
@@ -137,6 +158,13 @@ defineEmits<{
   (e: 'reset'): void
   (e: 'toggle-bot', color: PlayerColor): void
 }>()
+
+const diceIcons = [Dice, Dice1, Dice2, Dice3, Dice4, Dice5, Dice6]
+
+const currentDiceIcon = computed(() => {
+  if (props.isRolling || !props.diceValue) return Dice
+  return diceIcons[props.diceValue] || Dice
+})
 
 const getActionStatusText = () => {
   if (props.isGameOver) return '🏆 খেলা সমাপ্ত!'

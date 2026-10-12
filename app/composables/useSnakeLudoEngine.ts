@@ -69,16 +69,22 @@ export function useSnakeLudoEngine() {
     const current = activePlayer.value
     if (current.hasWon) return
 
-    state.value.isRolling = true
-    sound.playDiceRoll()
+    try {
+      state.value.isRolling = true
+      try {
+        sound.playRoll()
+      } catch {}
 
-    await new Promise(r => setTimeout(r, 600))
+      await new Promise(r => setTimeout(r, 600))
 
-    const roll = Math.floor(Math.random() * 6) + 1
-    state.value.diceValue = roll
-    state.value.isRolling = false
+      const roll = Math.floor(Math.random() * 6) + 1
+      state.value.diceValue = roll
+      state.value.isRolling = false
 
-    await handlePlayerMove(roll)
+      await handlePlayerMove(roll)
+    } catch {
+      state.value.isRolling = false
+    }
   }
 
   const handlePlayerMove = async (steps: number) => {
@@ -92,14 +98,18 @@ export function useSnakeLudoEngine() {
       state.value.lastEventType = 'move'
       state.value.lastEventMessage = msg
       addHistory(player.name, player.color, msg, 'penalty')
-      sound.playPenalty()
+      try {
+        sound.playKill()
+      } catch {}
       await new Promise(r => setTimeout(r, 800))
       advanceTurn()
       return
     }
 
     player.position = targetPos
-    sound.playStep()
+    try {
+      sound.playStep()
+    } catch {}
 
     await new Promise(r => setTimeout(r, 450))
 
@@ -109,14 +119,18 @@ export function useSnakeLudoEngine() {
         state.value.lastEventType = 'snake'
         state.value.lastEventMessage = encounter.trollMessage
         addHistory(player.name, player.color, encounter.trollMessage, 'snake')
-        sound.playCapture()
+        try {
+          sound.playKill()
+        } catch {}
         await new Promise(r => setTimeout(r, 600))
         player.position = encounter.end
       } else {
         state.value.lastEventType = 'ladder'
         state.value.lastEventMessage = encounter.trollMessage
         addHistory(player.name, player.color, encounter.trollMessage, 'ladder')
-        sound.playVictory()
+        try {
+          sound.playHome()
+        } catch {}
         await new Promise(r => setTimeout(r, 600))
         player.position = encounter.end
       }
@@ -131,7 +145,9 @@ export function useSnakeLudoEngine() {
       player.hasWon = true
       player.rank = state.value.winnerQueue.length + 1
       state.value.winnerQueue.push(player.id)
-      sound.playVictory()
+      try {
+        sound.playWin()
+      } catch {}
       const winMsg = `🎉 বিজয়ী! ${player.name} ${player.rank} নাম্বার স্থান অধিকার করেছে!`
       state.value.lastEventMessage = winMsg
       addHistory(player.name, player.color, winMsg, 'win')
@@ -144,6 +160,9 @@ export function useSnakeLudoEngine() {
     }
 
     if (steps === 6 && !player.hasWon) {
+      try {
+        sound.playSix()
+      } catch {}
       const sixMsg = `🔥 ${player.name} ছক্কা মেরেছে! বোনাস রোল পেয়ে গেল!`
       state.value.lastEventType = 'six'
       state.value.lastEventMessage = sixMsg
