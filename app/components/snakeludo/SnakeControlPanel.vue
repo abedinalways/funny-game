@@ -1,5 +1,5 @@
 <template>
-  <div class="flex flex-col gap-4 w-full max-w-[360px]">
+  <div class="flex flex-col gap-3 sm:gap-4 w-full max-w-full sm:max-w-[420px] lg:max-w-[360px]">
     <!-- Dice Roller Card -->
     <div class="rounded-xl bg-surface border-2 border-border p-4 shadow-xl select-none">
       <div class="flex items-center justify-between mb-3 border-b border-border pb-2">
