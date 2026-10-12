@@ -20,6 +20,14 @@ export interface SnakePlayer {
   rank?: number
 }
 
+export interface SnakeHistoryMessage {
+  id: string
+  sender: string
+  color: PlayerColor
+  text: string
+  type: 'snake' | 'ladder' | 'six' | 'move' | 'win' | 'penalty'
+}
+
 export interface SnakeLudoState {
   players: SnakePlayer[]
   activePlayerIndex: number
@@ -29,4 +37,5 @@ export interface SnakeLudoState {
   isGameOver: boolean
   lastEventMessage: string | null
   lastEventType: 'snake' | 'ladder' | 'six' | 'move' | null
+  history: SnakeHistoryMessage[]
 }

@@ -84,3 +84,4 @@ export const useUserProfile = () => {
     availableAvatars: FUNNY_AVATARS,
   }
 }
+
