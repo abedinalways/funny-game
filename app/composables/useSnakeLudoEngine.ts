@@ -1,6 +1,6 @@
 import { ref, computed } from 'vue'
 import type { PlayerColor } from '../types/ludo'
-import type { SnakeLudoState, SnakePlayer } from '../types/snakeLudo'
+import type { SnakeLudoState, SnakePlayer, SnakeHistoryMessage } from '../types/snakeLudo'
 import { SNAKES_AND_LADDERS } from '../constants/snakeLudo'
 import { useFunnySound } from './useFunnySound'
 
@@ -20,13 +20,27 @@ export function useSnakeLudoEngine() {
     winnerQueue: [],
     isGameOver: false,
     lastEventMessage: 'খেলা শুরু করার জন্য ডাইস রোল করো!',
-    lastEventType: null
+    lastEventType: null,
+    history: []
   })
 
   const activePlayer = computed(() => state.value.players[state.value.activePlayerIndex])
 
   const findSnakeOrLadder = (pos: number) => {
     return SNAKES_AND_LADDERS.find(item => item.start === pos) || null
+  }
+
+  const addHistory = (sender: string, color: PlayerColor, text: string, type: SnakeHistoryMessage['type']) => {
+    state.value.history.unshift({
+      id: `${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+      sender,
+      color,
+      text,
+      type
+    })
+    if (state.value.history.length > 25) {
+      state.value.history.pop()
+    }
   }
 
   const advanceTurn = () => {
@@ -74,10 +88,12 @@ export function useSnakeLudoEngine() {
     let targetPos = prevPos + steps
 
     if (targetPos > 100) {
+      const msg = `${player.name} ১০০ এর বেশি হয়ে গেছে (${targetPos})! ঢোকা যাবে না। দরকার ছিল ${100 - prevPos}!`
       state.value.lastEventType = 'move'
-      state.value.lastEventMessage = `${player.name} ১০০ এর বেশি হয়ে গেছে! ঢোকা যাবে না। প্রয়োজন ছিল ঠিক ${100 - prevPos}!`
+      state.value.lastEventMessage = msg
+      addHistory(player.name, player.color, msg, 'penalty')
       sound.playPenalty()
-      await new Promise(r => setTimeout(r, 900))
+      await new Promise(r => setTimeout(r, 800))
       advanceTurn()
       return
     }
@@ -92,19 +108,23 @@ export function useSnakeLudoEngine() {
       if (encounter.type === 'snake') {
         state.value.lastEventType = 'snake'
         state.value.lastEventMessage = encounter.trollMessage
+        addHistory(player.name, player.color, encounter.trollMessage, 'snake')
         sound.playCapture()
         await new Promise(r => setTimeout(r, 600))
         player.position = encounter.end
       } else {
         state.value.lastEventType = 'ladder'
         state.value.lastEventMessage = encounter.trollMessage
+        addHistory(player.name, player.color, encounter.trollMessage, 'ladder')
         sound.playVictory()
         await new Promise(r => setTimeout(r, 600))
         player.position = encounter.end
       }
     } else {
+      const msg = `${player.name} ডাইসে ${steps} ফেলে পৌঁছে গেল ${player.position} নাম্বার ঘরে!`
       state.value.lastEventType = 'move'
-      state.value.lastEventMessage = `${player.name} পৌঁছে গেল ${player.position} নাম্বার ঘরে!`
+      state.value.lastEventMessage = msg
+      addHistory(player.name, player.color, msg, 'move')
     }
 
     if (player.position === 100) {
@@ -112,7 +132,9 @@ export function useSnakeLudoEngine() {
       player.rank = state.value.winnerQueue.length + 1
       state.value.winnerQueue.push(player.id)
       sound.playVictory()
-      state.value.lastEventMessage = `🎉 বিজয়ী! ${player.name} ${player.rank} নাম্বার স্থান অর্জন করেছে!`
+      const winMsg = `🎉 বিজয়ী! ${player.name} ${player.rank} নাম্বার স্থান অধিকার করেছে!`
+      state.value.lastEventMessage = winMsg
+      addHistory(player.name, player.color, winMsg, 'win')
 
       const activeRemaining = state.value.players.filter(p => !p.hasWon)
       if (activeRemaining.length <= 1) {
@@ -122,8 +144,10 @@ export function useSnakeLudoEngine() {
     }
 
     if (steps === 6 && !player.hasWon) {
+      const sixMsg = `🔥 ${player.name} ছক্কা মেরেছে! বোনাস রোল পেয়ে গেল!`
       state.value.lastEventType = 'six'
-      state.value.lastEventMessage = `${player.name} ছক্কা মেরেছে! বোনাস রোল পেয়ে গেল!`
+      state.value.lastEventMessage = sixMsg
+      addHistory(player.name, player.color, sixMsg, 'six')
       if (player.isBot) {
         setTimeout(() => {
           rollDice()
@@ -160,6 +184,7 @@ export function useSnakeLudoEngine() {
     state.value.isGameOver = false
     state.value.lastEventMessage = 'নতুন খেলা শুরু হলো! শুভকামনা!'
     state.value.lastEventType = null
+    state.value.history = []
   }
 
   const setPlayerName = (color: PlayerColor, name: string, avatar?: string) => {

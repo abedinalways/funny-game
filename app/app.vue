@@ -296,7 +296,7 @@ const handleRematch = () => {
     <div v-else class="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
       <div class="lg:col-span-7 xl:col-span-8 flex flex-col items-center w-full">
         <div class="relative w-full flex justify-center">
-          <SnakeSnakeBoard
+          <SnakeludoSnakeBoard
             :players="snakeEngine.state.value.players"
             :active-player="snakeEngine.activePlayer.value"
           />
@@ -309,14 +309,13 @@ const handleRematch = () => {
       </div>
 
       <div class="lg:col-span-5 xl:col-span-4 flex flex-col gap-4 w-full items-center lg:items-start">
-        <SnakeSnakeControlPanel
+        <SnakeludoSnakeControlPanel
           :players="snakeEngine.state.value.players"
           :active-player="snakeEngine.activePlayer.value"
           :dice-value="snakeEngine.state.value.diceValue"
           :is-rolling="snakeEngine.state.value.isRolling"
           :is-game-over="snakeEngine.state.value.isGameOver"
-          :last-message="snakeEngine.state.value.lastEventMessage"
-          :last-message-type="snakeEngine.state.value.lastEventType"
+          :history="snakeEngine.state.value.history"
           @roll="snakeEngine.rollDice"
           @reset="snakeEngine.resetGame"
           @toggle-bot="snakeEngine.toggleBot"

@@ -156,3 +156,4 @@ const handleJoin = () => {
     </div>
   </div>
 </template>
+
