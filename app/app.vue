@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { ref, watch } from 'vue'
 import { HugeiconsIcon } from '@hugeicons/vue'
 import { Crown02Icon, RefreshIcon, VolumeHighIcon, VolumeMute01Icon, AiGameIcon, User02Icon, UserAdd01Icon } from '@hugeicons/core-free-icons'
 
@@ -6,6 +7,9 @@ import type { EmojiTauntItem } from '~/types/taunt'
 import { useEmojiTaunts } from '~/composables/useEmojiTaunts'
 import { useUserProfile } from '~/composables/useUserProfile'
 import { useRoomInvite } from '~/composables/useRoomInvite'
+import { useSnakeLudoEngine } from '~/composables/useSnakeLudoEngine'
+
+const gameMode = ref<'classic' | 'snake'>('classic')
 
 const {
   players,
@@ -28,6 +32,8 @@ const {
   resetGame,
 } = useLudoEngine()
 
+const snakeEngine = useSnakeLudoEngine()
+
 const { profile, availableAvatars, updateName, updateAvatar } = useUserProfile()
 const {
   currentRoom,
@@ -46,6 +52,9 @@ watch(
     if (red && name) {
       red.name = name
     }
+    if (name) {
+      snakeEngine.setPlayerName('red', name, profile.value.avatar)
+    }
   },
   { immediate: true }
 )
@@ -56,13 +65,17 @@ const isInviteModalOpen = ref(false)
 const { activeTaunts, triggerTaunt, triggerRandomBotTaunt } = useEmojiTaunts()
 
 const handleSendTaunt = (taunt: EmojiTauntItem) => {
-  triggerTaunt(taunt, activePlayerColor.value, activePlayer.value.name)
+  if (gameMode.value === 'classic') {
+    triggerTaunt(taunt, activePlayerColor.value, activePlayer.value.name)
+  } else {
+    triggerTaunt(taunt, snakeEngine.activePlayer.value.color, snakeEngine.activePlayer.value.name)
+  }
 }
 
 watch(
   () => history.value[0],
   (latest) => {
-    if (latest) {
+    if (latest && gameMode.value === 'classic') {
       const player = players.value.find(p => p.color === latest.color)
       if (player && player.isBot && Math.random() < 0.6) {
         setTimeout(() => {
@@ -78,7 +91,7 @@ const isVictoryModalOpen = ref(false)
 watch(
   () => winners.value.length,
   (count) => {
-    if (count > 0) {
+    if (count > 0 && gameMode.value === 'classic') {
       isVictoryModalOpen.value = true
     }
   }
@@ -92,7 +105,7 @@ const handleRematch = () => {
 
 <template>
   <main class="min-h-screen bg-canvas text-neutral-50 px-3 sm:px-6 py-6 flex flex-col items-center justify-between">
-    <header class="w-full max-w-7xl flex items-center justify-between pb-4 border-b border-border/50 mb-6">
+    <header class="w-full max-w-7xl flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-border/50 mb-6">
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 rounded-sm bg-gradient-to-br from-amber-300 to-amber-500 text-slate-950 flex items-center justify-center shadow-lg">
           <HugeiconsIcon
@@ -110,8 +123,26 @@ const handleRematch = () => {
         </div>
       </div>
 
-      <div class="flex items-center gap-2 flex-wrap justify-end">
-        <!-- User Profile Pill -->
+      <div class="flex items-center gap-2 flex-wrap">
+        <div class="flex items-center bg-slate-900 border border-slate-700 p-1 rounded-lg">
+          <button
+            type="button"
+            class="px-3 py-1 text-xs font-bold rounded transition"
+            :class="gameMode === 'classic' ? 'bg-amber-400 text-slate-950 shadow-sm' : 'text-slate-400 hover:text-slate-200'"
+            @click="gameMode = 'classic'"
+          >
+            🎲 ক্লাসিক লুডু
+          </button>
+          <button
+            type="button"
+            class="px-3 py-1 text-xs font-bold rounded transition"
+            :class="gameMode === 'snake' ? 'bg-emerald-500 text-slate-950 shadow-sm' : 'text-slate-400 hover:text-slate-200'"
+            @click="gameMode = 'snake'"
+          >
+            🐍 সাপ-লুডু (Snakes)
+          </button>
+        </div>
+
         <button
           type="button"
           class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold rounded-sm border border-border bg-slate-900/90 hover:bg-slate-800 text-neutral-200 transition-colors cursor-pointer shadow-sm"
@@ -122,7 +153,6 @@ const handleRematch = () => {
           <span class="text-[9px] font-mono text-neutral-400">({{ profile.id }})</span>
         </button>
 
-        <!-- Invite Friends Room Button -->
         <button
           type="button"
           class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-black uppercase rounded-sm border border-emerald-500/70 bg-emerald-950/60 text-emerald-300 hover:bg-emerald-900/60 transition-colors cursor-pointer shadow-sm"
@@ -136,7 +166,7 @@ const handleRematch = () => {
         </button>
 
         <button
-          v-if="winners.length > 0"
+          v-if="gameMode === 'classic' && winners.length > 0"
           type="button"
           class="inline-flex items-center gap-1.5 px-3 py-1.5 text-xs font-bold uppercase rounded-sm border border-amber-400/80 bg-amber-400/20 text-amber-400 hover:bg-amber-400/30 transition-colors cursor-pointer shadow-sm animate-pulse"
           @click="isVictoryModalOpen = true"
@@ -164,7 +194,7 @@ const handleRematch = () => {
         <button
           type="button"
           class="inline-flex items-center gap-2 px-3 py-1.5 text-xs font-bold uppercase rounded-sm border border-border bg-surface hover:bg-slate-800 transition-colors cursor-pointer shadow-sm"
-          @click="resetGame"
+          @click="gameMode === 'classic' ? resetGame() : snakeEngine.resetGame()"
         >
           <HugeiconsIcon
             :icon="RefreshIcon"
@@ -175,7 +205,7 @@ const handleRematch = () => {
       </div>
     </header>
 
-    <div class="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+    <div v-if="gameMode === 'classic'" class="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
       <div class="lg:col-span-7 xl:col-span-8 flex flex-col items-center w-full">
         <div class="relative w-full flex justify-center">
           <LudoGameBoard
@@ -260,6 +290,37 @@ const handleRematch = () => {
         </div>
 
         <LudoFunnyChatFeed :messages="history" />
+      </div>
+    </div>
+
+    <div v-else class="w-full max-w-7xl grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
+      <div class="lg:col-span-7 xl:col-span-8 flex flex-col items-center w-full">
+        <div class="relative w-full flex justify-center">
+          <SnakeSnakeBoard
+            :players="snakeEngine.state.value.players"
+            :active-player="snakeEngine.activePlayer.value"
+          />
+          <LudoFloatingTauntOverlay :taunts="activeTaunts" />
+        </div>
+
+        <div class="w-full max-w-[720px] mt-4">
+          <LudoEmojiTauntPicker @select="handleSendTaunt" />
+        </div>
+      </div>
+
+      <div class="lg:col-span-5 xl:col-span-4 flex flex-col gap-4 w-full items-center lg:items-start">
+        <SnakeSnakeControlPanel
+          :players="snakeEngine.state.value.players"
+          :active-player="snakeEngine.activePlayer.value"
+          :dice-value="snakeEngine.state.value.diceValue"
+          :is-rolling="snakeEngine.state.value.isRolling"
+          :is-game-over="snakeEngine.state.value.isGameOver"
+          :last-message="snakeEngine.state.value.lastEventMessage"
+          :last-message-type="snakeEngine.state.value.lastEventType"
+          @roll="snakeEngine.rollDice"
+          @reset="snakeEngine.resetGame"
+          @toggle-bot="snakeEngine.toggleBot"
+        />
       </div>
     </div>
 
