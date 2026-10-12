@@ -6,7 +6,7 @@ import type { WsMessagePayload } from '../types/multiplayer'
 export function useMultiplayerSync(profile: Ref<UserProfile>, roomCode: Ref<string>) {
   const isConnected = ref(false)
   const isReconnecting = ref(false)
-  const myAssignedColor = ref<PlayerColor | null>('red')
+  const myAssignedColor = ref<PlayerColor | null>(null)
   const hostId = ref<string>('')
   const roomOccupants = ref<Array<{ id: string; name: string; avatar: string; color?: PlayerColor; isHost: boolean }>>([])
   const assignedColors = ref<Record<PlayerColor, string | null>>({
@@ -142,6 +142,23 @@ export function useMultiplayerSync(profile: Ref<UserProfile>, roomCode: Ref<stri
         socket.close()
       }
       connect()
+    }
+  )
+
+  watch(
+    () => profile.value.id,
+    () => {
+      if (socket && socket.readyState === WebSocket.OPEN) {
+        sendRaw({
+          type: 'ROOM_JOIN',
+          roomCode: roomCode.value,
+          senderId: profile.value.id,
+          senderName: profile.value.name,
+          data: {
+            avatar: profile.value.avatar
+          }
+        })
+      }
     }
   )
 
