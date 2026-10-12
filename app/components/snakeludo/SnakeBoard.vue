@@ -1,7 +1,7 @@
 <template>
-  <div class="relative w-full max-w-[720px] aspect-square select-none rounded-2xl bg-slate-950 border-4 border-slate-700/80 shadow-[0_0_50px_rgba(0,0,0,0.8)] p-2.5 sm:p-4 flex flex-col justify-between overflow-hidden">
+  <div class="relative w-full max-w-[720px] aspect-square select-none rounded-xl sm:rounded-2xl bg-slate-950 border-2 sm:border-4 border-slate-700/80 shadow-[0_0_50px_rgba(0,0,0,0.8)] p-1.5 sm:p-3 md:p-4 flex flex-col justify-between overflow-hidden">
     <!-- SVG Overlay for realistic curved snakes and rigid ladders -->
-    <svg class="absolute inset-2.5 sm:inset-4 w-[calc(100%-20px)] sm:w-[calc(100%-32px)] h-[calc(100%-20px)] sm:h-[calc(100%-32px)] pointer-events-none z-10" viewBox="0 0 1000 1000">
+    <svg class="absolute inset-1.5 sm:inset-3 md:inset-4 w-[calc(100%-12px)] sm:w-[calc(100%-24px)] md:w-[calc(100%-32px)] h-[calc(100%-12px)] sm:h-[calc(100%-24px)] md:h-[calc(100%-32px)] pointer-events-none z-10" viewBox="0 0 1000 1000">
       <defs>
         <!-- Ladder step pattern / marker -->
         <filter id="glow-snake" x="-20%" y="-20%" width="140%" height="140%">
@@ -96,19 +96,19 @@
       >
         <div class="w-full flex items-center justify-between leading-none">
           <span
-            class="font-black font-mono text-[10px] sm:text-xs tracking-tight"
-            :class="cell.number === 100 ? 'text-amber-300 font-extrabold text-sm' : 'text-slate-300'"
+            class="font-black font-mono text-[8px] sm:text-[10px] md:text-xs tracking-tight"
+            :class="cell.number === 100 ? 'text-amber-300 font-extrabold text-xs sm:text-sm' : 'text-slate-300'"
           >
             {{ cell.number }}
           </span>
-          <span v-if="cell.number === 100" class="text-xs sm:text-sm">🏆</span>
-          <span v-else-if="cell.encounter" class="text-[9px] sm:text-[10px] px-1 py-0.2 rounded font-extrabold"
+          <span v-if="cell.number === 100" class="text-[10px] sm:text-xs md:text-sm">🏆</span>
+          <span v-else-if="cell.encounter" class="text-[7px] sm:text-[9px] md:text-[10px] px-0.5 sm:px-1 py-0.2 rounded font-extrabold"
                 :class="cell.encounter.type === 'snake' ? 'bg-red-500/30 text-red-300' : 'bg-emerald-500/30 text-emerald-300'">
             {{ cell.encounter.type === 'snake' ? '↓' + cell.encounter.end : '↑' + cell.encounter.end }}
           </span>
         </div>
 
-        <div class="w-full text-center">
+        <div class="w-full text-center hidden sm:block">
           <span v-if="cell.encounter" class="text-[8px] font-bold truncate block px-0.5 opacity-80"
                 :class="cell.encounter.type === 'snake' ? 'text-rose-300' : 'text-emerald-300'">
             {{ cell.encounter.name }}
@@ -116,18 +116,18 @@
         </div>
 
         <!-- Player Tokens on Cell -->
-        <div class="flex items-center justify-center gap-1 min-h-[20px] sm:min-h-[26px] flex-wrap z-20">
+        <div class="flex items-center justify-center gap-0.5 sm:gap-1 min-h-[14px] sm:min-h-[20px] md:min-h-[26px] flex-wrap z-20">
           <div
             v-for="p in getPlayersAtCell(cell.number)"
             :key="p.id"
-            class="relative w-5 h-5 sm:w-6 sm:h-6 rounded-full flex items-center justify-center shadow-lg border-2 border-white transition-all transform hover:scale-125"
+            class="relative w-3.5 h-3.5 sm:w-5 sm:h-5 md:w-6 md:h-6 rounded-full flex items-center justify-center shadow-lg border sm:border-2 border-white transition-all transform hover:scale-125"
             :class="getPlayerBadgeColor(p.color)"
             :title="`${p.name} (ঘর: ${cell.number})`"
           >
-            <span class="text-xs sm:text-sm leading-none drop-shadow">{{ p.avatar }}</span>
+            <span class="text-[9px] sm:text-xs md:text-sm leading-none drop-shadow">{{ p.avatar }}</span>
             <span
               v-if="p.id === activePlayer.color"
-              class="absolute -top-1 -right-1 w-2.5 h-2.5 rounded-full bg-amber-400 ring-2 ring-slate-900 animate-ping"
+              class="absolute -top-1 -right-1 w-2 h-2 sm:w-2.5 sm:h-2.5 rounded-full bg-amber-400 ring-1 sm:ring-2 ring-slate-900 animate-ping"
             />
           </div>
         </div>

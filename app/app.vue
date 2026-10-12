@@ -273,8 +273,8 @@ const handleSnakeRematch = () => {
 </script>
 
 <template>
-  <main class="min-h-screen bg-canvas text-neutral-50 px-3 sm:px-6 py-6 flex flex-col items-center justify-between">
-    <header class="w-full max-w-7xl flex flex-col md:flex-row md:items-center md:justify-between gap-4 pb-4 border-b border-border/50 mb-6">
+  <main class="min-h-screen bg-canvas text-neutral-50 px-2 sm:px-4 md:px-6 py-3 sm:py-6 flex flex-col items-center justify-between">
+    <header class="w-full max-w-7xl flex flex-col md:flex-row md:items-center md:justify-between gap-3 sm:gap-4 pb-3 sm:pb-4 border-b border-border/50 mb-4 sm:mb-6">
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 rounded-sm bg-gradient-to-br from-amber-300 to-amber-500 text-slate-950 flex items-center justify-center shadow-lg">
           <HugeiconsIcon
