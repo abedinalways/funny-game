@@ -125,12 +125,32 @@
           </p>
         </div>
       </div>
+
+      <!-- Live Chat Input in Snake Mode -->
+      <form class="p-1.5 border-t border-border bg-slate-950/60 flex items-center gap-1.5" @submit.prevent="handleSendChat">
+        <input
+          v-model="inputChatText"
+          type="text"
+          placeholder="সাপ-লুডু চ্যাট পাঠান... (Enter)"
+          class="flex-1 px-2.5 py-1 rounded-sm bg-slate-900 border border-border text-xs text-neutral-100 placeholder-neutral-500 focus:outline-none focus:border-emerald-400 transition"
+        />
+        <button
+          type="submit"
+          class="inline-flex items-center justify-center p-1.5 rounded-sm bg-emerald-500 hover:bg-emerald-400 text-slate-950 cursor-pointer shadow transition"
+          :disabled="!inputChatText.trim()"
+        >
+          <HugeiconsIcon
+            :icon="SentIcon"
+            :size="13"
+          />
+        </button>
+      </form>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue'
+import { ref, computed } from 'vue'
 import { HugeiconsIcon } from '@hugeicons/vue'
 import {
   Dice,
@@ -140,6 +160,7 @@ import {
   Dice4,
   Dice5,
   Dice6,
+  SentIcon,
 } from '@hugeicons/core-free-icons'
 import type { PlayerColor } from '~/types/ludo'
 import type { SnakePlayer, SnakeHistoryMessage } from '~/types/snakeLudo'
@@ -153,11 +174,21 @@ const props = defineProps<{
   history: SnakeHistoryMessage[]
 }>()
 
-defineEmits<{
+const emit = defineEmits<{
   (e: 'roll'): void
   (e: 'reset'): void
   (e: 'toggle-bot', color: PlayerColor): void
+  (e: 'sendMessage', text: string): void
 }>()
+
+const inputChatText = ref('')
+
+const handleSendChat = () => {
+  const text = inputChatText.value.trim()
+  if (!text) return
+  emit('sendMessage', text)
+  inputChatText.value = ''
+}
 
 const diceIcons = [Dice, Dice1, Dice2, Dice3, Dice4, Dice5, Dice6]
 
