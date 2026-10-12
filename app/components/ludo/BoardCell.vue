@@ -56,7 +56,7 @@ const cellBg = computed(() => {
 
 <template>
   <div
-    class="relative w-full h-full min-h-[30px] sm:min-h-[36px] md:min-h-[42px] border border-border/70 rounded-sm flex items-center justify-center select-none overflow-hidden transition-all duration-200"
+    class="relative w-full h-full min-h-[22px] sm:min-h-[34px] md:min-h-[42px] border border-border/70 rounded-sm flex items-center justify-center select-none overflow-hidden transition-all duration-200"
     :class="[
       cellBg,
       isDestination ? `${targetRingStyles[destinationColor]} z-20 scale-[1.02]` : '',
