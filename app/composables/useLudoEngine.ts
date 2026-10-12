@@ -54,7 +54,7 @@ const createInitialPlayers = (): Player[] => {
   })
 }
 
-export const useLudoEngine = () => {
+export const useLudoEngine = (options?: { isBotTurnAllowed?: () => boolean }) => {
   const sound = useFunnySound()
   const players = ref<Player[]>(createInitialPlayers())
   const activePlayerColor = ref<PlayerColor>('red')
@@ -280,6 +280,8 @@ export const useLudoEngine = () => {
   }
 
   watch([activePlayerColor, phase], async ([color, currentPhase]) => {
+    if (options?.isBotTurnAllowed && !options.isBotTurnAllowed()) return
+
     const player = players.value.find(p => p.color === color)
     if (!player || !player.isBot || winners.value.length >= 3) return
 

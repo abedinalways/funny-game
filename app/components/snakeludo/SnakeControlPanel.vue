@@ -19,7 +19,7 @@
             isRolling ? 'scale-95 ring-4 ring-amber-400 cursor-wait' : 'hover:scale-105 active:scale-95 cursor-pointer',
             isGameOver ? 'opacity-50 cursor-not-allowed' : ''
           ]"
-          :disabled="isRolling || isGameOver || activePlayer.isBot"
+          :disabled="isRolling || isGameOver || activePlayer.isBot || (myColor ? myColor !== activePlayer.color : false)"
           @click="$emit('roll')"
         >
           <HugeiconsIcon
@@ -172,6 +172,7 @@ const props = defineProps<{
   isRolling: boolean
   isGameOver: boolean
   history: SnakeHistoryMessage[]
+  myColor?: PlayerColor | null
 }>()
 
 const emit = defineEmits<{
@@ -201,6 +202,9 @@ const getActionStatusText = () => {
   if (props.isGameOver) return '🏆 খেলা সমাপ্ত!'
   if (props.isRolling) return '🎲 ডাইস ঘুরছে...'
   if (props.activePlayer.isBot) return '🤖 বট চিন্তা করে চাল দিচ্ছে...'
+  if (props.myColor && props.myColor !== props.activePlayer.color) {
+    return `অপেক্ষা করুন... (${props.activePlayer.name}-এর চাল)`
+  }
   return 'ডাইস রোল করতে ট্যাপ করুন'
 }
 
