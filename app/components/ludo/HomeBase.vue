@@ -49,34 +49,34 @@ const getSlotToken = (index: number): Token | undefined => {
 
 <template>
   <div
-    class="w-full h-full p-2.5 sm:p-3 rounded-sm border-2 flex flex-col justify-between transition-all duration-300 select-none"
+    class="w-full h-full p-1 sm:p-2.5 md:p-3 rounded-sm border sm:border-2 flex flex-col justify-between transition-all duration-300 select-none overflow-hidden"
     :class="[
       baseBgStyles[color].bg,
       baseBgStyles[color].border,
-      isMyTurn ? `${baseBgStyles[color].glow} ring-offset-2 ring-offset-slate-950` : 'opacity-90',
+      isMyTurn ? `${baseBgStyles[color].glow} ring-offset-1 sm:ring-offset-2 ring-offset-slate-950` : 'opacity-90',
     ]"
   >
-    <div class="flex items-center justify-between px-1">
+    <div class="flex items-center justify-between px-0.5 sm:px-1">
       <span
-        class="text-xs sm:text-sm font-black uppercase tracking-wider px-2 py-0.5 rounded-sm shadow-md truncate max-w-[120px]"
+        class="text-[9px] sm:text-xs md:text-sm font-black uppercase tracking-wider px-1 sm:px-2 py-0.2 sm:py-0.5 rounded-sm shadow-md truncate max-w-[68px] sm:max-w-[120px]"
         :class="baseBgStyles[color].accent"
       >
         {{ playerName }}
       </span>
       <span
         v-if="isMyTurn"
-        class="text-[10px] sm:text-xs font-black text-amber-300 animate-pulse uppercase tracking-wider bg-amber-400/20 px-2 py-0.5 rounded-sm border border-amber-400/40"
+        class="text-[8px] sm:text-[10px] md:text-xs font-black text-amber-300 animate-pulse uppercase tracking-wider bg-amber-400/20 px-1 sm:px-2 py-0.2 sm:py-0.5 rounded-sm border border-amber-400/40"
       >
         Turn
       </span>
     </div>
 
     <!-- 4 Token Base Slots -->
-    <div class="grid grid-cols-2 gap-3 p-3 bg-slate-950/80 rounded-sm border-2 border-border/60 my-auto mx-auto aspect-square w-5/6 max-w-[160px] shadow-inner">
+    <div class="grid grid-cols-2 gap-1 sm:gap-2.5 md:gap-3 p-1 sm:p-2.5 md:p-3 bg-slate-950/80 rounded-sm border sm:border-2 border-border/60 my-auto mx-auto aspect-square w-full sm:w-5/6 max-w-[160px] shadow-inner">
       <div
         v-for="index in 4"
         :key="index - 1"
-        class="aspect-square rounded-sm border border-border/80 bg-surface/90 flex items-center justify-center p-1 shadow-sm transition-transform"
+        class="aspect-square rounded-sm border border-border/80 bg-surface/90 flex items-center justify-center p-0.5 sm:p-1 shadow-sm transition-transform"
       >
         <template v-if="getSlotToken(index - 1)">
           <LudoTokenPiece
@@ -88,7 +88,7 @@ const getSlotToken = (index: number): Token | undefined => {
         </template>
         <div
           v-else
-          class="w-3.5 h-3.5 rounded-sm bg-border/40"
+          class="w-2 h-2 sm:w-3.5 sm:h-3.5 rounded-sm bg-border/40"
         />
       </div>
     </div>
