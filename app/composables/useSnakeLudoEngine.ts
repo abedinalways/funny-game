@@ -64,7 +64,7 @@ export function useSnakeLudoEngine() {
     }
   }
 
-  const rollDice = async () => {
+  const rollDice = async (forcedRoll?: number) => {
     if (state.value.isRolling || state.value.isGameOver) return
     const current = activePlayer.value
     if (current.hasWon) return
@@ -77,7 +77,7 @@ export function useSnakeLudoEngine() {
 
       await new Promise(r => setTimeout(r, 600))
 
-      const roll = Math.floor(Math.random() * 6) + 1
+      const roll = forcedRoll || (Math.floor(Math.random() * 6) + 1)
       state.value.diceValue = roll
       state.value.isRolling = false
 
