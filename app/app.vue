@@ -32,6 +32,7 @@ const {
   rollDice,
   selectToken,
   resetGame,
+  addFunnyMessage,
 } = useLudoEngine()
 
 const snakeEngine = useSnakeLudoEngine()
@@ -189,6 +190,16 @@ onRemoteAction(async (payload) => {
     return
   }
 
+  if (payload.type === 'CHAT_MESSAGE') {
+    const { text, color, senderName, gameMode: remoteMode } = payload.data
+    if (remoteMode === 'classic') {
+      addFunnyMessage(senderName, color, text)
+    } else {
+      snakeEngine.addHistory(senderName, color, text, 'move')
+    }
+    return
+  }
+
   if (payload.type === 'GAME_RESET') {
     if (payload.data?.gameMode === 'classic') {
       resetGame()
@@ -198,6 +209,24 @@ onRemoteAction(async (payload) => {
     return
   }
 })
+
+const handleSendChatMessage = (text: string) => {
+  const currentColor = myAssignedColor.value || 'red'
+  const currentName = profile.value.name
+
+  if (gameMode.value === 'classic') {
+    addFunnyMessage(currentName, currentColor, text)
+  } else {
+    snakeEngine.addHistory(currentName, currentColor, text, 'move')
+  }
+
+  broadcastAction('CHAT_MESSAGE', {
+    text,
+    color: currentColor,
+    senderName: currentName,
+    gameMode: gameMode.value,
+  })
+}
 
 const handleSwitchGameMode = (mode: 'classic' | 'snake') => {
   gameMode.value = mode
@@ -473,7 +502,11 @@ const handleSnakeRematch = () => {
           </div>
         </div>
 
-        <LudoFunnyChatFeed :messages="history" />
+        <LudoFunnyChatFeed
+          :messages="history"
+          :my-color="myAssignedColor"
+          @send-message="handleSendChatMessage"
+        />
       </div>
     </div>
 
@@ -503,6 +536,7 @@ const handleSnakeRematch = () => {
           @roll="handleLocalRollDice"
           @reset="handleLocalResetGame"
           @toggle-bot="snakeEngine.toggleBot"
+          @send-message="handleSendChatMessage"
         />
       </div>
     </div>
