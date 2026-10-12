@@ -36,11 +36,11 @@ const currentDiceIcon = computed(() => {
   return diceIcons[props.value] || Dice
 })
 
-const colorTheme: Record<PlayerColor, { ring: string; btn: string; text: string }> = {
-  red: { ring: 'ring-ludo-red', btn: 'bg-ludo-red text-white hover:bg-ludo-red-dark', text: 'text-ludo-red' },
-  green: { ring: 'ring-ludo-green', btn: 'bg-ludo-green text-white hover:bg-ludo-green-dark', text: 'text-ludo-green' },
-  yellow: { ring: 'ring-ludo-yellow', btn: 'bg-ludo-yellow text-slate-900 hover:bg-ludo-yellow-dark', text: 'text-ludo-yellow' },
-  blue: { ring: 'ring-ludo-blue', btn: 'bg-ludo-blue text-white hover:bg-ludo-blue-dark', text: 'text-ludo-blue' },
+const colorTheme: Record<PlayerColor, { ring: string; btn: string; text: string; glow: string }> = {
+  red: { ring: 'ring-red-500', btn: 'bg-gradient-to-r from-red-600 to-red-700 hover:from-red-500 hover:to-red-600 text-white shadow-red-900/40', text: 'text-red-400', glow: 'shadow-[0_0_20px_rgba(239,68,68,0.5)]' },
+  green: { ring: 'ring-emerald-500', btn: 'bg-gradient-to-r from-emerald-600 to-emerald-700 hover:from-emerald-500 hover:to-emerald-600 text-white shadow-emerald-900/40', text: 'text-emerald-400', glow: 'shadow-[0_0_20px_rgba(34,197,94,0.5)]' },
+  yellow: { ring: 'ring-amber-400', btn: 'bg-gradient-to-r from-amber-400 to-yellow-500 hover:from-amber-300 hover:to-yellow-400 text-slate-950 font-black shadow-amber-900/40', text: 'text-amber-400', glow: 'shadow-[0_0_20px_rgba(234,179,8,0.5)]' },
+  blue: { ring: 'ring-blue-500', btn: 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-500 hover:to-blue-600 text-white shadow-blue-900/40', text: 'text-blue-400', glow: 'shadow-[0_0_20px_rgba(59,130,246,0.5)]' },
 }
 
 const handleRoll = () => {
@@ -51,35 +51,35 @@ const handleRoll = () => {
 </script>
 
 <template>
-  <div class="flex items-center gap-3 p-3 bg-surface border border-border rounded-sm shadow-lg select-none">
+  <div class="flex items-center justify-between gap-4 p-4 bg-surface border-2 border-border rounded-sm shadow-xl select-none">
     <div
-      class="relative w-16 h-16 rounded-sm bg-slate-950 border-2 border-border/80 flex items-center justify-center cursor-pointer transition-all duration-300"
+      class="relative w-20 h-20 rounded-sm bg-slate-950 border-2 border-border flex items-center justify-center cursor-pointer transition-all duration-300"
       :class="[
         colorTheme[activeColor].ring,
-        rolling ? 'animate-spin scale-110 shadow-lg' : 'hover:scale-105',
-        canRoll && !rolling ? 'ring-2 ring-offset-2 ring-offset-slate-900 animate-pulse' : 'opacity-80',
+        rolling ? 'animate-spin scale-110 shadow-2xl' : 'hover:scale-105',
+        canRoll && !rolling ? `${colorTheme[activeColor].glow} ring-2 ring-offset-2 ring-offset-slate-950 animate-pulse` : 'opacity-85',
       ]"
       @click="handleRoll"
     >
       <HugeiconsIcon
         :icon="currentDiceIcon"
-        :size="42"
-        :class="[colorTheme[activeColor].text, rolling ? 'opacity-70' : '']"
+        :size="54"
+        :class="[colorTheme[activeColor].text, rolling ? 'opacity-60 scale-95' : '']"
       />
 
       <span
         v-if="value && !rolling"
-        class="absolute -top-1.5 -right-1.5 w-5 h-5 rounded-sm bg-amber-400 text-slate-950 text-xs font-black flex items-center justify-center shadow"
+        class="absolute -top-2 -right-2 w-7 h-7 rounded-sm bg-amber-400 border border-slate-950 text-slate-950 text-sm font-black flex items-center justify-center shadow-lg animate-bounce"
       >
         {{ value }}
       </span>
     </div>
 
-    <div class="flex flex-col gap-1.5">
-      <div class="flex items-center gap-2">
-        <span class="text-xs font-medium text-neutral-300">Turn:</span>
+    <div class="flex flex-col flex-1 gap-2">
+      <div class="flex items-center justify-between">
+        <span class="text-xs font-semibold text-neutral-300 uppercase tracking-wider">বর্তমান চাল:</span>
         <span
-          class="text-xs font-bold uppercase tracking-wider px-2 py-0.5 rounded-sm"
+          class="text-xs font-black uppercase tracking-wider px-2.5 py-1 rounded-sm shadow-sm"
           :class="colorTheme[activeColor].btn"
         >
           {{ activeColor }}
@@ -88,12 +88,12 @@ const handleRoll = () => {
 
       <button
         type="button"
-        class="px-4 py-1.5 text-xs font-bold uppercase tracking-wider rounded-sm transition-all duration-200 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow"
+        class="w-full py-2.5 px-4 text-xs sm:text-sm font-black uppercase tracking-wider rounded-sm transition-all duration-200 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed shadow-lg active:scale-95"
         :class="colorTheme[activeColor].btn"
         :disabled="!canRoll || rolling"
         @click="handleRoll"
       >
-        {{ rolling ? 'Rolling...' : 'Roll Dice' }}
+        {{ rolling ? 'ঘুরছে...' : '🎲 ডাইস রোল করুন' }}
       </button>
     </div>
   </div>
