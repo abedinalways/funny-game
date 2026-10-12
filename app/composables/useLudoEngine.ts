@@ -332,5 +332,6 @@ export const useLudoEngine = () => {
     rollDice,
     selectToken,
     resetGame,
+    addFunnyMessage,
   }
 }
